@@ -1,3 +1,8 @@
 spring:
   application:
-    name: mymarket
+    name: my-market
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
