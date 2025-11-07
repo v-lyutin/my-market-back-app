@@ -4,7 +4,7 @@
 CREATE TABLE ${schemaName}.orders (
   id           BIGSERIAL PRIMARY KEY,
   session_id   VARCHAR(128) NULL,
-  status       VARCHAR(24) NOT NULL DEFAULT 'CREATED',
+  status       VARCHAR(16) NOT NULL DEFAULT 'CREATED',
   total_minor  BIGINT NOT NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT chk_orders_total_nonneg CHECK (total_minor >= 0)
