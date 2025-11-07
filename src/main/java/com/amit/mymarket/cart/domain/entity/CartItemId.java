@@ -1,4 +1,4 @@
-package com.amit.mymarket.cart.entity;
+package com.amit.mymarket.cart.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

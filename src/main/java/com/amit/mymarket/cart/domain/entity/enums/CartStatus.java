@@ -1,4 +1,4 @@
-package com.amit.mymarket.cart.entity.enums;
+package com.amit.mymarket.cart.domain.entity.enums;
 
 public enum CartStatus {
 
