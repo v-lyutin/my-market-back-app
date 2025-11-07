@@ -12,11 +12,11 @@ databaseChangeLog:
       file: v1/changelog-create-carts-table.sql
       relativeToChangelogFile: true
   - include:
-      file: v1/changelog-create-carts-items-table.sql
+      file: v1/changelog-create-carts_items-table.sql
       relativeToChangelogFile: true
   - include:
       file: v1/changelog-create-orders-table.sql
       relativeToChangelogFile: true
   - include:
-      file: v1/changelog-create-orders-items-table.sql
+      file: v1/changelog-create-orders_items-table.sql
       relativeToChangelogFile: true

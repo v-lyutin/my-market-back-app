@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import org.hibernate.Hibernate;
 
+@Entity
+@Table(schema = "shop", name = "orders_items")
 public class OrderItem {
 
     @EmbeddedId

@@ -5,6 +5,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME:postgres}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:postgres}
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
       POSTGRES_DB: my-market
