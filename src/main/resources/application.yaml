@@ -1,6 +1,11 @@
 spring:
   application:
     name: my-market
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/my-market}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 server:
   port: 8080
   servlet:

@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:17.6-alpine3.22
+    container_name: my-market-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:postgres}
+      POSTGRES_DB: my-market
