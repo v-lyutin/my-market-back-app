@@ -13,7 +13,7 @@ public interface CatalogQueryService {
      * Returns a page of catalog items according to search/sort/pagination.
      * No cart quantities are embedded here.
      */
-    Page<Item> fetchCatalogPage(String search, SortType sort, int pageNumber, int pageSize);
+    Page<Item> fetchCatalogPage(String search, SortType sortType, int pageNumber, int pageSize);
 
     /**
      * Returns the current quantity in cart for a single item of the given session.

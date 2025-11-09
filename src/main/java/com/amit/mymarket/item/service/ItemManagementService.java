@@ -3,8 +3,6 @@ package com.amit.mymarket.item.service;
 import com.amit.mymarket.item.domain.entity.Item;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
-
 public interface ItemManagementService {
 
     /**
