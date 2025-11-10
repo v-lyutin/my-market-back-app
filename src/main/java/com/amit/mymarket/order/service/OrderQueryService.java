@@ -12,7 +12,7 @@ public interface OrderQueryService {
     List<Order> fetchOrdersBySession(String sessionId);
 
     /**
-     * Returns a single order if it belongs to the session; otherwise throws NotFoundException.
+     * Returns a single order if it belongs to the session + otherwise throws ResourceNotFoundException.
      */
     Order fetchOrderByIdForSession(long orderId, String sessionId);
 

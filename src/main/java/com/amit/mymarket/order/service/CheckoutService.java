@@ -1,5 +1,7 @@
 package com.amit.mymarket.order.service;
 
+import com.amit.mymarket.order.service.exception.EmptyCartException;
+
 public interface CheckoutService {
 
     /**
