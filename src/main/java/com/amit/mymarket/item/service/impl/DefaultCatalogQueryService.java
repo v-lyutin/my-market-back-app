@@ -48,7 +48,7 @@ public class DefaultCatalogQueryService implements CatalogQueryService {
         if (itemIds.isEmpty()) {
             return Page.empty(pageable);
         }
-        Map<Long, Item> itemsById = itemRepository.findAllById(itemIds).stream()
+        Map<Long, Item> itemsById = this.itemRepository.findAllById(itemIds).stream()
                 .collect(Collectors.toMap(Item::getId, Function.identity()));
         List<Item> items = itemIds.stream()
                 .map(itemsById::get)

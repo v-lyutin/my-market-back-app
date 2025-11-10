@@ -8,7 +8,7 @@ public interface CartCommandService {
     void incrementCartItemQuantity(String sessionId, long itemId);
 
     /**
-     * Decrements item quantity by 1; deletes row when quantity would reach zero (no-op if absent).
+     * Decrements item quantity by 1 + deletes row when quantity would reach zero (no-op if absent).
      */
     void decrementCartItemQuantityOrDelete(String sessionId, long itemId);
 

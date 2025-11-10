@@ -8,7 +8,7 @@ public interface CartQueryService {
 
     /**
      * Returns all cart rows for the session’s active cart.
-     * Each CartItem references Item lazily; caller decides how to initialize it.
+     * Each CartItem references Item lazily + caller decides how to initialize it.
      */
     List<CartItem> fetchCartItems(String sessionId);
 
