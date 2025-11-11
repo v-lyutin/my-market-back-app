@@ -12,14 +12,14 @@ public final class MimeTypeResolver {
 
     public static String resolve(MultipartFile file) {
         try (InputStream inputStream = file.getInputStream()) {
-            String mime = TIKA.detect(inputStream, file.getOriginalFilename());
-            if (mime == null || mime.isBlank()) {
+            String mimeType = TIKA.detect(inputStream, file.getOriginalFilename());
+            if (mimeType == null || mimeType.isBlank()) {
                 return file.getContentType() != null ? file.getContentType() : MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE;
             }
-            if ("image/jpg".equalsIgnoreCase(mime) || "image/pjpeg".equalsIgnoreCase(mime)) {
+            if ("image/jpg".equalsIgnoreCase(mimeType) || "image/pjpeg".equalsIgnoreCase(mimeType)) {
                 return "image/jpeg";
             }
-            return mime.toLowerCase();
+            return mimeType.toLowerCase();
         } catch (Exception exception) {
             return file.getContentType() != null ? file.getContentType() : MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE;
         }

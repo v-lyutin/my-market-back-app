@@ -41,16 +41,16 @@ public class MinioMediaStorageService implements MediaStorageService {
             long size = file.getSize();
             MediaFileValidator.validateFileSize(size, this.minioStorageProperties.maxFileSizeBytes());
 
-            String mime = MimeTypeResolver.resolve(file);
-            MediaFileValidator.validateMimeType(mime, this.minioStorageProperties.allowedMimeTypes());
+            String mimeType = MimeTypeResolver.resolve(file);
+            MediaFileValidator.validateMimeType(mimeType, this.minioStorageProperties.allowedMimeTypes());
 
-            String key = this.keyNamingStrategy.buildKey(pathSpecification, mime);
+            String key = this.keyNamingStrategy.buildKey(pathSpecification, mimeType);
 
             try (InputStream inputStream = file.getInputStream()) {
                 PutObjectArgs.Builder builder = PutObjectArgs.builder()
                         .bucket(this.minioStorageProperties.bucket())
                         .object(key)
-                        .contentType(mime);
+                        .contentType(mimeType);
 
                 if (size >= 0) {
                     builder.stream(inputStream, size, -1);

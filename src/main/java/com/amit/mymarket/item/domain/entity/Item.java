@@ -23,7 +23,7 @@ public class Item {
 
     @Min(value = 0)
     @Column(name = "price_minor", nullable = false)
-    private long priceMinor;
+    private Long priceMinor;
 
     public Long getId() {
         return this.id;
@@ -57,11 +57,11 @@ public class Item {
         this.imagePath = imagePath;
     }
 
-    public long getPriceMinor() {
+    public Long getPriceMinor() {
         return this.priceMinor;
     }
 
-    public void setPriceMinor(long priceMinor) {
+    public void setPriceMinor(Long priceMinor) {
         this.priceMinor = priceMinor;
     }
 
