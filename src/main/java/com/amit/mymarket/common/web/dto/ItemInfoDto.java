@@ -1,6 +1,6 @@
 package com.amit.mymarket.common.web.dto;
 
-public record ItemDto(
+public record ItemInfoDto(
         long id,
         String title,
         String description,

@@ -1,6 +1,6 @@
-package com.amit.mymarket.item.web;
+package com.amit.mymarket.item.api;
 
-import com.amit.mymarket.common.web.dto.ItemDto;
+import com.amit.mymarket.common.web.dto.ItemInfoDto;
 import com.amit.mymarket.item.domain.type.ItemAction;
 import com.amit.mymarket.common.util.Paging;
 import com.amit.mymarket.item.domain.type.SortType;
@@ -20,7 +20,7 @@ public class ItemResource {
                                @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
                                @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
                                Model model) {
-        List<List<ItemDto>> chunkedItems = List.of();
+        List<List<ItemInfoDto>> chunkedItems = List.of();
         Paging paging = new Paging(pageSize, pageNumber, false, false);
         model.addAttribute("items", chunkedItems);
         model.addAttribute("search", search);
@@ -44,7 +44,7 @@ public class ItemResource {
 
     @GetMapping(path = "/{id}")
     public String getItemPage(@PathVariable(name = "id") long id, Model model) {
-        ItemDto item = new ItemDto(id, "Title", "Desc", "/images/ball.jpg", 199_00, 0);
+        ItemInfoDto item = new ItemInfoDto(id, "Title", "Desc", "/images/ball.jpg", 199_00, 0);
         model.addAttribute("item", item);
         return "item";
     }
@@ -53,7 +53,7 @@ public class ItemResource {
     public String mutateItemFromItemPage(@PathVariable(name = "id") long id,
                                          @RequestParam(name = "action") ItemAction action,
                                          Model model) {
-        ItemDto item = new ItemDto(id, "Title", "Desc", "/images/ball.jpg", 199_00, 1);
+        ItemInfoDto item = new ItemInfoDto(id, "Title", "Desc", "/images/ball.jpg", 199_00, 1);
         model.addAttribute("item", item);
         return "item";
     }

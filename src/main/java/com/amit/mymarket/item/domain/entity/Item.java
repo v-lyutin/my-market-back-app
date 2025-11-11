@@ -18,12 +18,20 @@ public class Item {
     @Column(name = "description", nullable = false, length = 2048)
     private String description;
 
-    @Column(name = "img_path", nullable = false, length = 512)
+    @Column(name = "img_path", length = 512)
     private String imagePath;
 
     @Min(value = 0)
     @Column(name = "price_minor", nullable = false)
     private Long priceMinor;
+
+    public Item() {}
+
+    public Item(String title, String description, Long priceMinor) {
+        this.title = title;
+        this.description = description;
+        this.priceMinor = priceMinor;
+    }
 
     public Long getId() {
         return this.id;
