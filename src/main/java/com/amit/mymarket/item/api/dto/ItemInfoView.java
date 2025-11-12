@@ -1,10 +1,10 @@
-package com.amit.mymarket.common.web.dto;
+package com.amit.mymarket.item.api.dto;
 
-public record ItemInfoDto(
+public record ItemInfoView(
         long id,
         String title,
         String description,
         String imagePath,
-        long price,
+        long priceMinor,
         int count) {
 }

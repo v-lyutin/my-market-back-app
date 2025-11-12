@@ -1,5 +1,6 @@
 package com.amit.mymarket.item.api.mapper;
 
+import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.CreateItemForm;
 import com.amit.mymarket.item.api.dto.ItemView;
 import com.amit.mymarket.item.api.dto.UpdateItemForm;
@@ -35,6 +36,18 @@ public final class DefaultItemMapper implements ItemMapper {
                 item.getDescription(),
                 item.getImagePath(),
                 item.getPriceMinor()
+        );
+    }
+
+    @Override
+    public ItemInfoView toItemInfoView(Item item, int quantity) {
+        return new ItemInfoView(
+                item.getId(),
+                item.getTitle(),
+                item.getDescription(),
+                item.getImagePath(),
+                item.getPriceMinor(),
+                quantity
         );
     }
 

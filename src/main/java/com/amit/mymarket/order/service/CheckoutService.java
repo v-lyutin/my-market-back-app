@@ -6,7 +6,7 @@ public interface CheckoutService {
 
     /**
      * Creates an order from the session’s active cart:
-     *  - snapshots title/price/quantity into orders_items,
+     *  - snapshots title/priceMinor/quantity into orders_items,
      *  - calculates and stores total,
      *  - clears the cart,
      * and returns the new order id.

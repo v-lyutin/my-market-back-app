@@ -96,7 +96,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     public Item fetchItemById(long itemId) {
         Item item = this.itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + itemId));
-        System.out.println("Path: " + item.getImagePath());
         if (StringUtils.hasText(item.getImagePath())) {
             item.setImagePath(this.mediaStorageService.buildPublicUrl(item.getImagePath()));
         }

@@ -85,7 +85,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return items sorted by price when sort parameter is PRICE")
+    @DisplayName(value = "Should return items sorted by priceMinor when sort parameter is PRICE")
     @Sql(statements = {
             "insert into shop.items (id, title, description, img_path, price_minor) values (1,'Apple','Red apple','/img/apple.png',100)",
             "insert into shop.items (id, title, description, img_path, price_minor) values (2,'banana','Yellow','/img/banana.png',50)",

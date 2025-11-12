@@ -1,6 +1,6 @@
 package com.amit.mymarket.cart.web;
 
-import com.amit.mymarket.common.web.dto.ItemInfoDto;
+import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.cart.domain.type.CartAction;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,7 +17,7 @@ public class CartResource {
 
     @GetMapping
     public String getCartItems(Model model) {
-        List<ItemInfoDto> items = List.of();
+        List<ItemInfoView> items = List.of();
         long total = 0L;
         model.addAttribute("items", items);
         model.addAttribute("total", total);
