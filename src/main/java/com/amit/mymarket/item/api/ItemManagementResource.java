@@ -43,7 +43,6 @@ public class ItemManagementResource {
     public String fetchItemById(@PathVariable long id, Model model) {
         ItemView item = this.itemManagementUseCase.fetchItemById(id);
         model.addAttribute("item", item);
-        System.out.println(item.imagePath());
         return "management/item-view";
     }
 
