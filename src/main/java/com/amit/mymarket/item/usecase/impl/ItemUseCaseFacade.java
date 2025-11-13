@@ -1,10 +1,9 @@
 package com.amit.mymarket.item.usecase.impl;
 
 import com.amit.mymarket.cart.service.CartCommandService;
-import com.amit.mymarket.common.service.MediaStorageService;
 import com.amit.mymarket.common.util.Paging;
-import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.CatalogPageDto;
+import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.mapper.ItemMapper;
 import com.amit.mymarket.item.domain.entity.Item;
 import com.amit.mymarket.item.domain.type.ItemAction;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +26,14 @@ public class ItemUseCaseFacade implements ItemUseCase {
 
     private final CartCommandService cartCommandService;
 
-    private final MediaStorageService mediaStorageService;
-
     private final ItemMapper itemMapper;
 
     @Autowired
     public ItemUseCaseFacade(CatalogQueryService catalogQueryService,
                              CartCommandService cartCommandService,
-                             MediaStorageService mediaStorageService,
                              ItemMapper itemMapper) {
         this.catalogQueryService = catalogQueryService;
         this.cartCommandService = cartCommandService;
-        this.mediaStorageService = mediaStorageService;
         this.itemMapper = itemMapper;
     }
 
@@ -56,11 +50,6 @@ public class ItemUseCaseFacade implements ItemUseCase {
         Map<Long, Integer> quantities = this.catalogQueryService.fetchCartQuantitiesForItems(sessionId, itemIds);
 
         List<ItemInfoView> itemInfoViews = items.stream()
-                .peek(item -> {
-                    if (StringUtils.hasText(item.getImagePath())) {
-                        item.setImagePath(this.mediaStorageService.buildPublicUrl(item.getImagePath()));
-                    }
-                })
                 .map(item -> this.itemMapper.toItemInfoView(item, quantities.getOrDefault(item.getId(), 0)))
                 .toList();
 
@@ -80,9 +69,6 @@ public class ItemUseCaseFacade implements ItemUseCase {
     @Transactional(readOnly = true)
     public ItemInfoView getItem(String sessionId, long itemId) {
         Item item = this.catalogQueryService.fetchItemOrThrow(itemId);
-        if (StringUtils.hasText(item.getImagePath())) {
-            item.setImagePath(this.mediaStorageService.buildPublicUrl(item.getImagePath()));
-        }
         int count = this.catalogQueryService.fetchCartQuantityForItem(sessionId, itemId);
         return this.itemMapper.toItemInfoView(item, count);
     }

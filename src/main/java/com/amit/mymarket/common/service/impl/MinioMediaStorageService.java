@@ -1,6 +1,7 @@
-package com.amit.mymarket.common.service;
+package com.amit.mymarket.common.service.impl;
 
 import com.amit.mymarket.common.configuration.MinioStorageProperties;
+import com.amit.mymarket.common.service.MediaStorageService;
 import com.amit.mymarket.common.service.exception.MediaStorageException;
 import com.amit.mymarket.common.service.strategy.KeyNamingStrategy;
 import com.amit.mymarket.common.service.util.MediaFileValidator;

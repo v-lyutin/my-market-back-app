@@ -72,11 +72,7 @@ public class DefaultItemManagementService implements ItemManagementService {
         if (itemToUpdate.getPriceMinor() != null) {
             item.setPriceMinor(itemToUpdate.getPriceMinor());
         }
-        item = this.itemRepository.save(item);
-        if (StringUtils.hasText(item.getImagePath())) {
-            item.setImagePath(this.mediaStorageService.buildPublicUrl(item.getImagePath()));
-        }
-        return item;
+        return this.itemRepository.save(item);
     }
 
     @Override
@@ -94,12 +90,8 @@ public class DefaultItemManagementService implements ItemManagementService {
     @Override
     @Transactional(readOnly = true)
     public Item fetchItemById(long itemId) {
-        Item item = this.itemRepository.findById(itemId)
+        return this.itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + itemId));
-        if (StringUtils.hasText(item.getImagePath())) {
-            item.setImagePath(this.mediaStorageService.buildPublicUrl(item.getImagePath()));
-        }
-        return item;
     }
 
     private PathSpecification buildItemPath(long itemId) {
