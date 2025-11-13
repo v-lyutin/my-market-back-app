@@ -14,8 +14,8 @@
     <!-- Header -->
     <div class="hstack gap-3 mb-3">
         <h2><span class="badge text-bg-success">Витрина магазина</span></h2>
-        <a href="/orders" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
-        <a href="/cart/items" class="btn btn-secondary bi bi-cart4"> Корзина</a>
+        <a href="v1/orders" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
+        <a href="v1/cart/items" class="btn btn-secondary bi bi-cart4"> Корзина</a>
         <a href="/v1/items" class="btn btn-secondary bi bi-arrow-left-square"> Главная</a>
     </div>
 
@@ -42,7 +42,7 @@
 
                     <h5>
                         <span class="badge text-bg-success fs-6"
-                              th:text="${item.priceMinor} + ' руб.'">0 руб.</span>
+                              th:text="${item.formatPrice} + ' ₽'">0 ₽</span>
                     </h5>
 
                     <p class="card-text mt-3" th:text="${item.description}">

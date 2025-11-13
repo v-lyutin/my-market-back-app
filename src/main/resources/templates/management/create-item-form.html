@@ -32,11 +32,9 @@
                          th:errors="*{description}"></div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Цена (в минимальных единицах)</label>
-                    <input type="number" class="form-control" th:field="*{priceMinor}" min="0" step="1"
-                           placeholder="Например, 1000 = 10.00 руб">
-                    <div class="text-danger small" th:if="${#fields.hasErrors('priceMinor')}"
-                         th:errors="*{priceMinor}"></div>
+                    <label class="form-label fw-semibold">Цена (₽)</label>
+                    <input type="text" th:field="*{formatPrice}" min="0" step="1" placeholder="Например: 199.99">
+                    <div class="text-danger small" th:if="${#fields.hasErrors('formatPrice')}" th:errors="*{formatPrice}"></div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Изображение (опционально)</label>

@@ -56,7 +56,7 @@
                     <h4 class="card-title" th:text="${item.title}">Название товара</h4>
 
                     <h5>
-                        <span class="badge text-bg-success fs-6" th:text="${item.priceMinor} + ' ₽'">0 ₽</span>
+                        <span class="badge text-bg-success fs-6" th:text="${item.formatPrice} + ' ₽'">0 ₽</span>
                     </h5>
 
                     <p class="card-text mt-3" th:text="${item.description}">

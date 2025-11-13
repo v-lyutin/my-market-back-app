@@ -100,7 +100,7 @@ public class Item {
                 ", title='" + this.title +
                 ", description='" + (this.description != null ? this.description.substring(0, Math.min(this.description.length(), 50)) + "..." : null) +
                 ", imagePath='" + this.imagePath +
-                ", priceMinor=" + this.priceMinor +
+                ", formatPrice=" + this.priceMinor +
                 '}';
     }
 

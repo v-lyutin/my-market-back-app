@@ -5,6 +5,6 @@ public record ItemInfoView(
         String title,
         String description,
         String imagePath,
-        long priceMinor,
+        String formatPrice,
         int count) {
 }

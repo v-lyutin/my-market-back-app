@@ -53,7 +53,7 @@ public class ItemManagementResource {
         model.addAttribute("form", new UpdateItemForm(
                 item.title(),
                 item.description(),
-                item.priceMinor()
+                item.formatPrice()
         ));
         return "management/edit-item-form";
     }

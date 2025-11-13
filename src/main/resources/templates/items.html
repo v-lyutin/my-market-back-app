@@ -73,7 +73,7 @@
 
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title" th:text="${item.title}">Название товара</h5>
-                    <h6><span class="badge text-bg-success" th:text="${item.priceMinor} + ' руб.'">0 руб.</span></h6>
+                    <h6><span class="badge text-bg-success" th:text="${item.formatPrice} + ' ₽'">0 ₽</span></h6>
                     <p class="card-text small text-muted mb-3" th:text="${item.description}">Описание товара</p>
 
                     <form method="post" th:action="@{/v1/items}" class="mt-auto">

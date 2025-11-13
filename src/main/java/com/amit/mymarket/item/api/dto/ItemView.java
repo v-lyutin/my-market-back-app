@@ -5,5 +5,5 @@ public record ItemView(
         String title,
         String description,
         String imagePath,
-        long priceMinor) {
+        String formatPrice) {
 }

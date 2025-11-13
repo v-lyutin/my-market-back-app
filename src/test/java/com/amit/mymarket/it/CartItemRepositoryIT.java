@@ -73,7 +73,7 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should calculate total priceMinor in minor units for the active cart of the given session")
+    @DisplayName(value = "Should calculate total formatPrice in minor units for the active cart of the given session")
     @Sql(statements = {
             "insert into shop.items (id, title, description, img_path, price_minor) values (1,'Apple','Red apple','/img/apple.png',100)",
             "insert into shop.items (id, title, description, img_path, price_minor) values (3,'Apricot','Orange apricot','/img/apricot.png',150)",

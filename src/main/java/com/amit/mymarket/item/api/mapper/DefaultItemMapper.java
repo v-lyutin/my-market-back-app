@@ -7,6 +7,9 @@ import com.amit.mymarket.item.api.dto.UpdateItemForm;
 import com.amit.mymarket.item.domain.entity.Item;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Component
 public final class DefaultItemMapper implements ItemMapper {
 
@@ -15,7 +18,7 @@ public final class DefaultItemMapper implements ItemMapper {
         return new Item(
                 createItemForm.title(),
                 createItemForm.description(),
-                createItemForm.priceMinor()
+                convertToMinor(createItemForm.formatPrice())
         );
     }
 
@@ -24,7 +27,7 @@ public final class DefaultItemMapper implements ItemMapper {
         return new Item(
                 updateItemForm.title(),
                 updateItemForm.description(),
-                updateItemForm.priceMinor()
+                convertToMinor(updateItemForm.formatPrice())
         );
     }
 
@@ -35,7 +38,7 @@ public final class DefaultItemMapper implements ItemMapper {
                 item.getTitle(),
                 item.getDescription(),
                 item.getImagePath(),
-                item.getPriceMinor()
+                formatPrice(item.getPriceMinor())
         );
     }
 
@@ -46,9 +49,25 @@ public final class DefaultItemMapper implements ItemMapper {
                 item.getTitle(),
                 item.getDescription(),
                 item.getImagePath(),
-                item.getPriceMinor(),
+                formatPrice(item.getPriceMinor()),
                 quantity
         );
+    }
+
+
+    private static String formatPrice(Long minor) {
+        if (minor == null) {
+            return "0";
+        }
+        BigDecimal price = BigDecimal.valueOf(minor).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        return price.toString();
+    }
+
+    private static long convertToMinor(String price) {
+        return new BigDecimal(price)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
     }
 
 }
