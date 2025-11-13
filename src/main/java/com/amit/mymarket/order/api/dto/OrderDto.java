@@ -1,9 +1,9 @@
-package com.amit.mymarket.order.web.dto;
+package com.amit.mymarket.order.api.dto;
 
 import java.util.List;
 
 public record OrderDto(
         long id,
         List<OrderItemDto> items,
-        long totalSum) {
+        String totalFormatted) {
 }

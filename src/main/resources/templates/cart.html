@@ -16,8 +16,8 @@
         <div class="col">
             <div class="hstack gap-3">
                 <h2><span class="badge text-bg-success">Корзина</span></h2>
-                <a href="/orders" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
-                <a href="/v1/items" class="btn btn-secondary bi bi-arrow-left-square"> На витрину</a>
+                <a th:href="@{/v1/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
+                <a th:href="@{/v1/items}" class="btn btn-secondary bi bi-arrow-left-square"> На витрину</a>
             </div>
         </div>
     </div>
@@ -66,10 +66,10 @@
         </div>
     </div>
 
-    <!-- Total -->
+    <!-- Total + checkout -->
     <div class="row p-2">
         <div class="col">
-            <form action="/buy" method="post" th:if="${!items.isEmpty()}">
+            <form th:action="@{/v1/orders}" method="post" th:if="${!items.isEmpty()}">
                 <div class="hstack gap-3">
                     <h2 th:text="'Итого: ' + ${total} + ' ₽'">Итого: 0.00 ₽</h2>
                     <button class="btn btn-warning ms-auto">Купить</button>

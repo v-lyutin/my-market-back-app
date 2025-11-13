@@ -1,8 +1,8 @@
-package com.amit.mymarket.order.web.dto;
+package com.amit.mymarket.order.api.dto;
 
 public record OrderItemDto(
         long id,
         String title,
-        long price,
+        String formatPrice,
         int count) {
 }

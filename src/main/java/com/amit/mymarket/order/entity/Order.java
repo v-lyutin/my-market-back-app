@@ -6,9 +6,7 @@ import jakarta.validation.constraints.Min;
 import org.hibernate.Hibernate;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(schema = "shop", name = "orders")
@@ -33,7 +31,7 @@ public class Order {
     private OffsetDateTime createdAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<OrderItem> items = new LinkedHashSet<>();
+    private List<OrderItem> items = new ArrayList<>();
 
     public Order() {}
 
@@ -91,11 +89,11 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    public Set<OrderItem> getItems() {
-        return Collections.unmodifiableSet(this.items);
+    public List<OrderItem> getItems() {
+        return Collections.unmodifiableList(this.items);
     }
 
-    public void setItems(Set<OrderItem> items) {
+    public void setItems(List<OrderItem> items) {
         this.items.clear();
         if (items != null) {
             items.forEach(this::addOrderItem);
