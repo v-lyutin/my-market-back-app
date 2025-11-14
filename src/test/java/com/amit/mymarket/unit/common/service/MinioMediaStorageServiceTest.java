@@ -32,14 +32,12 @@ class MinioMediaStorageServiceTest {
     @Mock
     KeyNamingStrategy keyNamingStrategy;
 
-    private MinioStorageProperties minioStorageProperties;
-
     private MinioMediaStorageService minioMediaStorageService;
 
     @BeforeEach
     void init() {
-        this.minioStorageProperties = defaultMinioStorageProperties();
-        this.minioMediaStorageService = buildNewMinioMediaStorageService(this.minioStorageProperties);
+        MinioStorageProperties minioStorageProperties = defaultMinioStorageProperties();
+        this.minioMediaStorageService = buildNewMinioMediaStorageService(minioStorageProperties);
     }
 
     @Test
@@ -87,62 +85,6 @@ class MinioMediaStorageServiceTest {
         );
         assertTrue(exception.getMessage().toLowerCase().contains("validation"));
         verifyNoInteractions(this.minioClient);
-    }
-
-    @Test
-    @DisplayName(value = "Should build public URL (base without trailing slash)")
-    void buildPublicUrl_shouldBuildPublicUrl() {
-        String url = this.minioMediaStorageService.buildPublicUrl("items/42/uuid/original.png");
-        assertEquals("http://localhost:9000/images/items/42/uuid/original.png", url);
-    }
-
-    @Test
-    @DisplayName(value = "Should trim trailing slash in base URL")
-    void buildPublicUrl_shouldTrimTrailingSlash() {
-        MinioStorageProperties trailing = new MinioStorageProperties(
-                "http://localhost:9000/",
-                this.minioStorageProperties.accessKey(),
-                this.minioStorageProperties.secretKey(),
-                this.minioStorageProperties.bucket(),
-                this.minioStorageProperties.secure(),
-                this.minioStorageProperties.createBucketIfMissing(),
-                this.minioStorageProperties.connectTimeoutMs(),
-                this.minioStorageProperties.writeTimeoutMs(),
-                this.minioStorageProperties.readTimeoutMs(),
-                this.minioStorageProperties.maxFileSizeBytes(),
-                this.minioStorageProperties.allowedMimeTypes()
-        );
-        MinioMediaStorageService service = buildNewMinioMediaStorageService(trailing);
-
-        String url = service.buildPublicUrl("k/p");
-        assertEquals("http://localhost:9000/images/k/p", url);
-    }
-
-    @Test
-    @DisplayName(value = "Should return null when key is null")
-    void buildPublicUrl_shouldReturnNullForNullKey() {
-        assertNull(this.minioMediaStorageService.buildPublicUrl(null));
-    }
-
-    @Test
-    @DisplayName(value = "Should return key when base URL is blank")
-    void buildPublicUrl_shouldReturnKeyWhenBaseUrlBlank() {
-        MinioStorageProperties minioStoragePropertiesWithBlankBaseUrl = new MinioStorageProperties(
-                "",
-                this.minioStorageProperties.accessKey(),
-                this.minioStorageProperties.secretKey(),
-                this.minioStorageProperties.bucket(),
-                this.minioStorageProperties.secure(),
-                this.minioStorageProperties.createBucketIfMissing(),
-                this.minioStorageProperties.connectTimeoutMs(),
-                this.minioStorageProperties.writeTimeoutMs(),
-                this.minioStorageProperties.readTimeoutMs(),
-                this.minioStorageProperties.maxFileSizeBytes(),
-                this.minioStorageProperties.allowedMimeTypes()
-        );
-        MinioMediaStorageService service = this.buildNewMinioMediaStorageService(minioStoragePropertiesWithBlankBaseUrl);
-
-        assertEquals("k/p", service.buildPublicUrl("k/p"));
     }
 
     @Test

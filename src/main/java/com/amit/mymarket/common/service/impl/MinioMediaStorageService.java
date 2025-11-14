@@ -88,17 +88,4 @@ public class MinioMediaStorageService implements MediaStorageService {
         }
     }
 
-    @Override
-    public String buildPublicUrl(String key) {
-        if (key == null) {
-            return null;
-        }
-        String minioBaseUrl = this.minioStorageProperties.baseUrl();
-        if (minioBaseUrl == null || minioBaseUrl.isBlank()) {
-            return key;
-        }
-        String trimmedBaseUrl = minioBaseUrl.endsWith("/") ? minioBaseUrl.substring(0, minioBaseUrl.length() - 1) : minioBaseUrl;
-        return trimmedBaseUrl + "/" + this.minioStorageProperties.bucket() + "/" + key;
-    }
-
 }

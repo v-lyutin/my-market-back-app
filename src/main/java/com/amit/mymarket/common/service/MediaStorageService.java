@@ -17,12 +17,4 @@ public interface MediaStorageService {
      */
     void deleteMediaFile(String key);
 
-    /**
-     * Builds a public URL for the given key, if direct linking is needed.
-     * Implementations may return the key as-is when a CDN/static prefix is applied elsewhere.
-     */
-    default String buildPublicUrl(String key) {
-        return key;
-    }
-
 }
