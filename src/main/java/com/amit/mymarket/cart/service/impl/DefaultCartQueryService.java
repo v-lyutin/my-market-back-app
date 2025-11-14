@@ -2,7 +2,7 @@ package com.amit.mymarket.cart.service.impl;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
 import com.amit.mymarket.cart.domain.entity.CartItem;
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.service.CartQueryService;

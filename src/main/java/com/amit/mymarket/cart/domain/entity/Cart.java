@@ -1,6 +1,6 @@
 package com.amit.mymarket.cart.domain.entity;
 
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import jakarta.persistence.*;
 import org.hibernate.Hibernate;
 

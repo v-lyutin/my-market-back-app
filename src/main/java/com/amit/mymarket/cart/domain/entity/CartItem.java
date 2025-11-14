@@ -1,6 +1,6 @@
 package com.amit.mymarket.cart.domain.entity;
 
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import org.hibernate.Hibernate;

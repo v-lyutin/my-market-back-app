@@ -1,4 +1,4 @@
-package com.amit.mymarket.cart.domain.type;
+package com.amit.mymarket.cart.api.type;
 
 public enum CartAction {
 

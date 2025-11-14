@@ -2,8 +2,8 @@ package com.amit.mymarket.item.api;
 
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.CatalogPageDto;
-import com.amit.mymarket.item.domain.type.ItemAction;
-import com.amit.mymarket.item.domain.type.SortType;
+import com.amit.mymarket.item.api.type.ItemAction;
+import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.usecase.ItemUseCase;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class ItemResource {
         model.addAttribute("search", catalogPageDto.search());
         model.addAttribute("sort", catalogPageDto.sort());
         model.addAttribute("paging", catalogPageDto.paging());
-        return "items";
+        return "item/items-view";
     }
 
     @PostMapping
@@ -59,7 +59,7 @@ public class ItemResource {
         String sessionId = httpSession.getId();
         ItemInfoView itemInfoView = this.itemUseCase.getItem(sessionId, id);
         model.addAttribute("item", itemInfoView);
-        return "item";
+        return "item/item-view";
     }
 
     @PostMapping(path = "/{id}")
@@ -71,7 +71,7 @@ public class ItemResource {
         this.itemUseCase.mutateItem(sessionId, id, action);
         ItemInfoView itemInfoView = this.itemUseCase.getItem(sessionId, id);
         model.addAttribute("item", itemInfoView);
-        return "item";
+        return "item/item-view";
     }
 
 }

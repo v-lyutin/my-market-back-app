@@ -1,7 +1,7 @@
 package com.amit.mymarket.item.service;
 
-import com.amit.mymarket.item.domain.entity.Item;
-import com.amit.mymarket.item.domain.type.SortType;
+import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.item.service.type.SortType;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

@@ -2,11 +2,11 @@ package com.amit.mymarket.unit.cart.service;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
 import com.amit.mymarket.cart.domain.entity.CartItem;
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.service.impl.DefaultCartCommandService;
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

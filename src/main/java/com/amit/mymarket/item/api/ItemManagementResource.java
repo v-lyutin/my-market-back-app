@@ -26,7 +26,7 @@ public class ItemManagementResource {
     @GetMapping(path = "/new")
     public String showCreateForm(Model model) {
         model.addAttribute("form", new CreateItemForm("", "", null));
-        return "management/create-item-form";
+        return "item/management/form/create-item-form";
     }
 
     @PostMapping
@@ -43,7 +43,7 @@ public class ItemManagementResource {
     public String fetchItemById(@PathVariable long id, Model model) {
         ItemView item = this.itemManagementUseCase.fetchItemById(id);
         model.addAttribute("item", item);
-        return "management/item-view";
+        return "item/management/view/item-management-view";
     }
 
     @GetMapping(path = "/{id}/edit")
@@ -55,7 +55,7 @@ public class ItemManagementResource {
                 item.description(),
                 item.formatPrice()
         ));
-        return "management/edit-item-form";
+        return "item/management/form/edit-item-form";
     }
 
     @PostMapping(path = "/{id}")

@@ -3,8 +3,8 @@ package com.amit.mymarket.order.usecase.mapper;
 import com.amit.mymarket.common.util.PriceFormatter;
 import com.amit.mymarket.order.api.dto.OrderDto;
 import com.amit.mymarket.order.api.dto.OrderItemDto;
-import com.amit.mymarket.order.entity.Order;
-import com.amit.mymarket.order.entity.OrderItem;
+import com.amit.mymarket.order.domain.entity.Order;
+import com.amit.mymarket.order.domain.entity.OrderItem;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

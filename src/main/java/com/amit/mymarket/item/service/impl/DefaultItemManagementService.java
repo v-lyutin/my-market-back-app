@@ -4,7 +4,7 @@ import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
 import com.amit.mymarket.common.service.MediaStorageService;
 import com.amit.mymarket.common.service.util.PathSpecification;
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.repository.ItemRepository;
 import com.amit.mymarket.item.service.ItemManagementService;
 import org.springframework.beans.factory.annotation.Autowired;

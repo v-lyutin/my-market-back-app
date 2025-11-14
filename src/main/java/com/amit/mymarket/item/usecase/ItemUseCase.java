@@ -2,8 +2,8 @@ package com.amit.mymarket.item.usecase;
 
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.CatalogPageDto;
-import com.amit.mymarket.item.domain.type.ItemAction;
-import com.amit.mymarket.item.domain.type.SortType;
+import com.amit.mymarket.item.api.type.ItemAction;
+import com.amit.mymarket.item.service.type.SortType;
 
 public interface ItemUseCase {
 

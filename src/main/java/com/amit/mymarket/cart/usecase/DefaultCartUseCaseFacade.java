@@ -2,10 +2,10 @@ package com.amit.mymarket.cart.usecase;
 
 import com.amit.mymarket.cart.api.dto.CartViewDto;
 import com.amit.mymarket.cart.domain.entity.CartItem;
-import com.amit.mymarket.cart.domain.type.CartAction;
+import com.amit.mymarket.cart.api.type.CartAction;
 import com.amit.mymarket.cart.service.CartCommandService;
 import com.amit.mymarket.cart.service.CartQueryService;
-import com.amit.mymarket.cart.usecase.mapper.CartMapper;
+import com.amit.mymarket.cart.api.mapper.CartMapper;
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.mapper.ItemMapper;
 import org.springframework.beans.factory.annotation.Autowired;

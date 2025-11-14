@@ -4,7 +4,7 @@ import com.amit.mymarket.item.api.dto.CreateItemForm;
 import com.amit.mymarket.item.api.dto.ItemView;
 import com.amit.mymarket.item.api.dto.UpdateItemForm;
 import com.amit.mymarket.item.api.mapper.ItemMapper;
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.service.ItemManagementService;
 import com.amit.mymarket.item.usecase.ItemManagementUseCase;
 import org.springframework.beans.factory.annotation.Autowired;

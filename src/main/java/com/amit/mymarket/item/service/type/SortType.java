@@ -1,4 +1,4 @@
-package com.amit.mymarket.item.domain.type;
+package com.amit.mymarket.item.service.type;
 
 public enum SortType {
 

@@ -1,7 +1,7 @@
 package com.amit.mymarket.cart.api;
 
 import com.amit.mymarket.cart.api.dto.CartViewDto;
-import com.amit.mymarket.cart.domain.type.CartAction;
+import com.amit.mymarket.cart.api.type.CartAction;
 import com.amit.mymarket.cart.usecase.CartUseCase;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class CartResource {
         CartViewDto cart = this.cartUseCase.getCart(httpSession.getId());
         model.addAttribute("items", cart.items());
         model.addAttribute("total", cart.totalFormatted());
-        return "cart";
+        return "cart/cart-view";
     }
 
     @PostMapping

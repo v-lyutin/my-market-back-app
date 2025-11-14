@@ -1,4 +1,4 @@
-package com.amit.mymarket.common.service.impl;
+package com.amit.mymarket.common.service.minio;
 
 import com.amit.mymarket.common.configuration.MinioStorageProperties;
 import com.amit.mymarket.common.service.MediaStorageService;

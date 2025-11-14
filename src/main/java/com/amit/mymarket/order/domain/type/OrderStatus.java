@@ -1,4 +1,4 @@
-package com.amit.mymarket.order.entity.enums;
+package com.amit.mymarket.order.domain.type;
 
 public enum OrderStatus {
 

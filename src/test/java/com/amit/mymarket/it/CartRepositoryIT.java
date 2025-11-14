@@ -1,7 +1,7 @@
 package com.amit.mymarket.it;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

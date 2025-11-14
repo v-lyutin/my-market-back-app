@@ -1,7 +1,7 @@
 package com.amit.mymarket.cart.repository;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

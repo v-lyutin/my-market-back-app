@@ -1,4 +1,4 @@
-package com.amit.mymarket.order.entity;
+package com.amit.mymarket.order.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

@@ -1,6 +1,6 @@
 package com.amit.mymarket.item.repository;
 
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.repository.projection.ItemWithCountRow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,7 +1,7 @@
 package com.amit.mymarket.unit.order.service;
 
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
-import com.amit.mymarket.order.entity.Order;
+import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.repository.OrderRepository;
 import com.amit.mymarket.order.repository.projection.OrderHeaderRow;
 import com.amit.mymarket.order.service.impl.DefaultOrderQueryService;

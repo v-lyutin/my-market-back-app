@@ -1,4 +1,4 @@
-package com.amit.mymarket.common.util;
+package com.amit.mymarket.item.api.dto;
 
 public record Paging(
         int pageSize,

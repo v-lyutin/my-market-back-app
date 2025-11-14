@@ -1,6 +1,6 @@
 package com.amit.mymarket.item.service;
 
-import com.amit.mymarket.item.domain.entity.Item;
+import com.amit.mymarket.item.entity.Item;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ItemManagementService {

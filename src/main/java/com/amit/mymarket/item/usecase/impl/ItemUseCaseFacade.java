@@ -1,13 +1,13 @@
 package com.amit.mymarket.item.usecase.impl;
 
 import com.amit.mymarket.cart.service.CartCommandService;
-import com.amit.mymarket.common.util.Paging;
+import com.amit.mymarket.item.api.dto.Paging;
 import com.amit.mymarket.item.api.dto.CatalogPageDto;
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.mapper.ItemMapper;
-import com.amit.mymarket.item.domain.entity.Item;
-import com.amit.mymarket.item.domain.type.ItemAction;
-import com.amit.mymarket.item.domain.type.SortType;
+import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.item.api.type.ItemAction;
+import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.service.CatalogQueryService;
 import com.amit.mymarket.item.usecase.ItemUseCase;
 import org.springframework.beans.factory.annotation.Autowired;

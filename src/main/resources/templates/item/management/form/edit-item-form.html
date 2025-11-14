@@ -35,8 +35,8 @@
 
                 <div class="mb-4">
                     <label class="form-label">Цена (в минимальных единицах)</label>
-                    <input type="number" class="form-control" th:field="*{priceMinor}" min="0" step="1">
-                    <div class="text-danger small" th:if="${#fields.hasErrors('priceMinor')}" th:errors="*{priceMinor}"></div>
+                    <input type="text" th:field="*{formatPrice}" min="0" step="1" placeholder="Например: 199.99">
+                    <div class="text-danger small" th:if="${#fields.hasErrors('formatPrice')}" th:errors="*{formatPrice}"></div>
                 </div>
 
                 <div class="hstack gap-3">

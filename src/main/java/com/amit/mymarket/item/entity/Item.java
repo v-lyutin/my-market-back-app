@@ -1,4 +1,4 @@
-package com.amit.mymarket.item.domain.entity;
+package com.amit.mymarket.item.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;

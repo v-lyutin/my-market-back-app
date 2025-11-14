@@ -2,13 +2,13 @@ package com.amit.mymarket.order.service.impl;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
 import com.amit.mymarket.cart.domain.entity.CartItem;
-import com.amit.mymarket.cart.domain.entity.enums.CartStatus;
+import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
-import com.amit.mymarket.item.domain.entity.Item;
-import com.amit.mymarket.order.entity.Order;
-import com.amit.mymarket.order.entity.OrderItem;
-import com.amit.mymarket.order.entity.enums.OrderStatus;
+import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.order.domain.entity.Order;
+import com.amit.mymarket.order.domain.entity.OrderItem;
+import com.amit.mymarket.order.domain.type.OrderStatus;
 import com.amit.mymarket.order.repository.OrderRepository;
 import com.amit.mymarket.order.service.CheckoutService;
 import com.amit.mymarket.order.service.exception.EmptyCartException;

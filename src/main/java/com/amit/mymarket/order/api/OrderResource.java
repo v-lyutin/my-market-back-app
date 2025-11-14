@@ -25,7 +25,7 @@ public class OrderResource {
     public String getOrders(Model model, HttpSession httpSession) {
         List<OrderDto> orders = this.orderUseCase.getOrders(httpSession.getId());
         model.addAttribute("orders", orders);
-        return "orders";
+        return "order/orders-view";
     }
 
     @GetMapping(path = "/{id}")
@@ -36,7 +36,7 @@ public class OrderResource {
         OrderDto order = this.orderUseCase.getOrder(httpSession.getId(), id);
         model.addAttribute("order", order);
         model.addAttribute("newOrder", newOrder);
-        return "order";
+        return "order/order-view";
     }
 
     @PostMapping

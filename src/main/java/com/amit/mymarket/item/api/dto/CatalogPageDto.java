@@ -1,7 +1,6 @@
 package com.amit.mymarket.item.api.dto;
 
-import com.amit.mymarket.common.util.Paging;
-import com.amit.mymarket.item.domain.type.SortType;
+import com.amit.mymarket.item.service.type.SortType;
 
 import java.util.List;
 

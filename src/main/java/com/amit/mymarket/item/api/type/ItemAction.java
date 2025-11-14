@@ -1,4 +1,4 @@
-package com.amit.mymarket.item.domain.type;
+package com.amit.mymarket.item.api.type;
 
 public enum ItemAction {
 

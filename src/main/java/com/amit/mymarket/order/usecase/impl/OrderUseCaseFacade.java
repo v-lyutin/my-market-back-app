@@ -1,7 +1,7 @@
 package com.amit.mymarket.order.usecase.impl;
 
 import com.amit.mymarket.order.api.dto.OrderDto;
-import com.amit.mymarket.order.entity.Order;
+import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.service.CheckoutService;
 import com.amit.mymarket.order.service.OrderQueryService;
 import com.amit.mymarket.order.usecase.OrderUseCase;

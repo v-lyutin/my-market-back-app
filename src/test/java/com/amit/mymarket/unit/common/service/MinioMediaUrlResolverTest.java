@@ -1,7 +1,7 @@
 package com.amit.mymarket.unit.common.service;
 
 import com.amit.mymarket.common.configuration.MinioStorageProperties;
-import com.amit.mymarket.common.service.impl.MinioMediaUrlResolver;
+import com.amit.mymarket.common.service.minio.MinioMediaUrlResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

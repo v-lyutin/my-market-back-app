@@ -1,6 +1,6 @@
 package com.amit.mymarket.order.service;
 
-import com.amit.mymarket.order.entity.Order;
+import com.amit.mymarket.order.domain.entity.Order;
 
 import java.util.List;
 
