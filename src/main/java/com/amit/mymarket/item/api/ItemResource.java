@@ -65,13 +65,10 @@ public class ItemResource {
     @PostMapping(path = "/{id}")
     public String mutateItemFromItemPage(@PathVariable(name = "id") long id,
                                          @RequestParam(name = "action") ItemAction action,
-                                         Model model,
                                          HttpSession httpSession) {
         String sessionId = httpSession.getId();
         this.itemUseCase.mutateItem(sessionId, id, action);
-        ItemInfoView itemInfoView = this.itemUseCase.getItem(sessionId, id);
-        model.addAttribute("item", itemInfoView);
-        return "item/item-view";
+        return "redirect:/v1/items/" + id;
     }
 
 }
