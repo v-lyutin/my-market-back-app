@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Заказ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-light">
+
+<!-- Alert for new order -->
+<div class="alert alert-success alert-dismissible fade show"
+     role="alert"
+     th:if="${newOrder}">
+    Поздравляем! Успешная покупка! &#128578;
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="container p-2">
+
+    <!-- Header -->
+    <div class="row p-2">
+        <div class="col">
+            <div class="hstack gap-3">
+                <h2>
+                    <span class="badge text-bg-success">Витрина магазина</span>
+                </h2>
+                <a th:href="@{/v1/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
+                <a th:href="@{/v1/cart/items}" class="btn btn-secondary bi bi-cart4"> Корзина</a>
+                <a th:href="@{/v1/items}" class="btn btn-secondary bi bi-arrow-left-square"> Главная</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order header -->
+    <div class="row p-2">
+        <div class="col">
+            <h2 th:text="${'Заказ №' + order.id}">Заказ №</h2>
+        </div>
+    </div>
+
+    <!-- Order items -->
+    <div class="row p-2" th:each="item : ${order.items}">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <b th:text="${item.title}">Название товара</b>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"
+                        th:text="${item.count} + ' шт.'">0 шт.</li>
+                    <li class="list-group-item"
+                        th:text="${item.formatPrice} + ' ₽'">0.00 ₽</li>
+                </ul>
+                <!-- Если понадобится сумма по позиции, её лучше добавить в DTO (например, lineTotalFormatted) -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Order total -->
+    <div class="row p-2">
+        <div class="col">
+            <h3 th:text="${'Сумма: ' + order.totalFormatted + ' ₽'}">Сумма: 0.00 ₽</h3>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

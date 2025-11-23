@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Заказы</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-light">
+<div class="container p-2">
+
+    <!-- Header -->
+    <div class="row p-2">
+        <div class="col">
+            <div class="hstack gap-3">
+                <h2>
+                    <span class="badge text-bg-success">Витрина магазина</span>
+                </h2>
+                <a th:href="@{/v1/cart/items}" class="btn btn-secondary bi bi-cart4 ms-auto"> Корзина</a>
+                <a th:href="@{/v1/items}" class="btn btn-secondary bi bi-arrow-left-square"> Главная</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders list -->
+    <div class="row p-2" th:each="order : ${orders}">
+        <div class="col">
+            <div class="card">
+
+                <div class="card-header">
+                    <a th:text="${'Заказ №' + order.id}"
+                       th:href="@{/v1/orders/{id}(id=${order.id})}">Заказ</a>
+                </div>
+
+                <ul class="list-group list-group-flush" th:each="item : ${order.items}">
+                    <li class="list-group-item">
+                        <span th:text="${item.title}">Товар</span>
+                        <span> (</span>
+                        <span th:text="${item.count}">0</span>
+                        <span> шт.) </span>
+                        <span th:text="${item.formatPrice}">0.00</span>
+                        <span> ₽</span>
+                    </li>
+                </ul>
+
+                <div class="card-footer">
+                    <b th:text="${'Сумма: ' + order.totalFormatted + ' ₽'}">Сумма: 0.00 ₽</b>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

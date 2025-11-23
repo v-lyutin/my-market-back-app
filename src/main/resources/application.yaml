@@ -1,3 +1,39 @@
 spring:
   application:
-    name: mymarket
+    name: my-market
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/my-market}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  liquibase:
+    enabled: true
+    change-log: classpath:db.changelog/db.changelog-master.yaml
+    liquibase-schema: public
+    default-schema: public
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+storage:
+  minio:
+    base-url: ${MINIO_URL:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minio}
+    secret-key: ${MINIO_SECRET_KEY:minio123}
+    bucket: ${MINIO_BUCKET_NAME:images}
+    secure: false
+    create-bucket-if-missing: true
+    connect-timeout-ms: ${MINIO_CONNECT_TIMEOUT_MS:5000}
+    write-timeout-ms: ${MINIO_WRITE_TIMEOUT_MS:60000}
+    read-timeout-ms: ${MINIO_READ_TIMEOUT_MS:60000}
+    max-file-size-bytes: ${MINIO_MAX_FILE_SIZE_BYTES:10485760}
+    public-read-enabled: ${MINIO_PUBLIC_READ_ENABLED:true}
+    allowed-mime-types:
+      - image/jpeg
+      - image/png
+      - image/webp
+
