@@ -15,7 +15,7 @@ import java.util.*;
 public class DefaultCartQueryService implements CartQueryService {
 
     private static final Comparator<CartItem> SORT_BY_TITLE = Comparator.comparing(
-                    cartItem -> cartItem.getItem().getTitle(),
+                    cartItem -> cartItem.getItemId().getTitle(),
                     String.CASE_INSENSITIVE_ORDER
             );
 
@@ -35,7 +35,7 @@ public class DefaultCartQueryService implements CartQueryService {
                 .map(Cart::getItems)
                 .stream()
                 .flatMap(Collection::stream)
-                .sorted(SORT_BY_TITLE.thenComparing(cartItem -> cartItem.getItem().getId()))
+                .sorted(SORT_BY_TITLE.thenComparing(cartItem -> cartItem.getItemId().getId()))
                 .toList();
     }
 

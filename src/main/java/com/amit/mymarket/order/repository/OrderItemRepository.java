@@ -1,7 +1,6 @@
 package com.amit.mymarket.order.repository;
 
 import com.amit.mymarket.order.domain.entity.OrderItem;
-import com.amit.mymarket.order.domain.entity.OrderItemId;
 import com.amit.mymarket.order.repository.projection.OrderItemSnapshotRow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

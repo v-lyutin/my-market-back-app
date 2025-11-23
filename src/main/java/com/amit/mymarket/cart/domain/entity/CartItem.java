@@ -1,66 +1,52 @@
 package com.amit.mymarket.cart.domain.entity;
 
-import com.amit.mymarket.item.entity.Item;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import org.hibernate.Hibernate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.OffsetDateTime;
+import java.util.Objects;
 
-@Entity
 @Table(schema = "shop", name = "carts_items")
 public class CartItem {
 
-    @EmbeddedId
-    private CartItemId id = new CartItemId();
+    @Id
+    private Long id;
 
-    @MapsId(value = "cartId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cart_id", nullable = false, foreignKey = @ForeignKey(name = "fk_carts_items_carts"))
-    private Cart cart;
+    @Column(value = "cart_id")
+    private Long cartId;
 
-    @MapsId(value = "itemId")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "item_id", nullable = false, foreignKey = @ForeignKey(name = "fk_carts_items_items"))
-    private Item item;
+    @Column(value = "item_Id")
+    private Long itemId;
 
     @Min(value = 1)
-    @Column(name = "quantity", nullable = false)
+    @Column(value = "quantity")
     private int quantity;
-
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
 
     public CartItem() {}
 
-    @PrePersist
-    @PreUpdate
-    void prePersistAndPreUpdate() {
-        this.updatedAt = OffsetDateTime.now();
-    }
-
-    public CartItemId getId() {
+    public Long getId() {
         return this.id;
     }
 
-    public void setId(CartItemId id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Cart getCart() {
-        return this.cart;
+    public Long getCartId() {
+        return this.cartId;
     }
 
-    public void setCart(Cart cart) {
-        this.cart = cart;
+    public void setCartId(Long cartId) {
+        this.cartId = cartId;
     }
 
-    public Item getItem() {
-        return this.item;
+    public Long getItemId() {
+        return this.itemId;
     }
 
-    public void setItem(Item item) {
-        this.item = item;
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
     public int getQuantity() {
@@ -71,40 +57,30 @@ public class CartItem {
         this.quantity = quantity;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return this.updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     @Override
     public boolean equals(Object otherObject) {
-        if (this == otherObject) {
-            return true;
-        }
-        if (otherObject == null) {
-            return false;
-        }
-        if (Hibernate.getClass(this) != Hibernate.getClass(otherObject)) {
+        if (otherObject == null || getClass() != otherObject.getClass()) {
             return false;
         }
         CartItem otherCartItem = (CartItem) otherObject;
-        return this.id != null && this.id.equals(otherCartItem.id);
+        return Objects.equals(this.id, otherCartItem.id)
+                && Objects.equals(this.cartId, otherCartItem.cartId)
+                && Objects.equals(this.itemId, otherCartItem.itemId)
+                && this.quantity == otherCartItem.quantity;
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(this.id, this.cartId, this.itemId, this.quantity);
     }
 
     @Override
     public String toString() {
         return "CartItem{" +
                 "id=" + this.id +
+                ", cartId=" + this.cartId +
+                ", itemId=" + this.itemId +
                 ", quantity=" + this.quantity +
-                ", updatedAt=" + this.updatedAt +
                 '}';
     }
 

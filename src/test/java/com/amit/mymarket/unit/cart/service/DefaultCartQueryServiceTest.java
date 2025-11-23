@@ -55,20 +55,20 @@ class DefaultCartQueryServiceTest {
         when(item1.getId()).thenReturn(20L);
 
         CartItem cartItem1 = mock(CartItem.class);
-        when(cartItem1.getItem()).thenReturn(item1);
+        when(cartItem1.getItemId()).thenReturn(item1);
 
         Item item2 = mock(Item.class);
         when(item2.getTitle()).thenReturn("Alpha");
         when(item2.getId()).thenReturn(10L);
 
         CartItem cartItem2 = mock(CartItem.class);
-        when(cartItem2.getItem()).thenReturn(item2);
+        when(cartItem2.getItemId()).thenReturn(item2);
 
         Item item3 = mock(Item.class);
         when(item3.getTitle()).thenReturn("beta");
 
         CartItem cartItem3 = mock(CartItem.class);
-        when(cartItem3.getItem()).thenReturn(item3);
+        when(cartItem3.getItemId()).thenReturn(item3);
 
         Set<CartItem> items = new HashSet<>(Arrays.asList(cartItem1, cartItem2, cartItem3));
         Cart cart = mock(Cart.class);

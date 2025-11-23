@@ -1,28 +1,29 @@
 package com.amit.mymarket.item.entity;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import org.hibernate.Hibernate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
+import java.util.Objects;
+
 @Table(schema = "shop", name = "items")
 public class Item {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 255)
+    @Column(value = "title")
     private String title;
 
-    @Column(name = "description", nullable = false, length = 2048)
+    @Column(value = "description")
     private String description;
 
-    @Column(name = "img_path", length = 512)
+    @Column(value = "img_path")
     private String imagePath;
 
     @Min(value = 0)
-    @Column(name = "price_minor", nullable = false)
+    @Column(value = "price_minor")
     private Long priceMinor;
 
     public Item() {}
@@ -75,17 +76,15 @@ public class Item {
 
     @Override
     public boolean equals(Object otherObject) {
-        if (this == otherObject) {
-            return true;
-        }
-        if (otherObject == null) {
-            return false;
-        }
-        if (Hibernate.getClass(this) != Hibernate.getClass(otherObject)) {
+        if (otherObject == null || getClass() != otherObject.getClass()) {
             return false;
         }
         Item otherItem = (Item) otherObject;
-        return this.id != null && this.id.equals(otherItem.id);
+        return Objects.equals(this.id, otherItem.id)
+                && Objects.equals(this.title, otherItem.title)
+                && Objects.equals(this.description, otherItem.description)
+                && Objects.equals(this.imagePath, otherItem.imagePath)
+                && Objects.equals(this.priceMinor, otherItem.priceMinor);
     }
 
     @Override
@@ -100,7 +99,7 @@ public class Item {
                 ", title='" + this.title +
                 ", description='" + (this.description != null ? this.description.substring(0, Math.min(this.description.length(), 50)) + "..." : null) +
                 ", imagePath='" + this.imagePath +
-                ", formatPrice=" + this.priceMinor +
+                ", priceMinor=" + this.priceMinor +
                 '}';
     }
 

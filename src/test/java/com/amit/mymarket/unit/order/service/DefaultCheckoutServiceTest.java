@@ -81,7 +81,7 @@ class DefaultCheckoutServiceTest {
         when(item1.getPriceMinor()).thenReturn(1500L);
 
         CartItem cartItem1 = mock(CartItem.class);
-        when(cartItem1.getItem()).thenReturn(item1);
+        when(cartItem1.getItemId()).thenReturn(item1);
         when(cartItem1.getQuantity()).thenReturn(2);
 
         Item item2 = mock(Item.class);
@@ -89,7 +89,7 @@ class DefaultCheckoutServiceTest {
         when(item2.getPriceMinor()).thenReturn(999L);
 
         CartItem cartItem2 = mock(CartItem.class);
-        when(cartItem2.getItem()).thenReturn(item2);
+        when(cartItem2.getItemId()).thenReturn(item2);
         when(cartItem2.getQuantity()).thenReturn(3);
 
         Cart cart = mock(Cart.class);

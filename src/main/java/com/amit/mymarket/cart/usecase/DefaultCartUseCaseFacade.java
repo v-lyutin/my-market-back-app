@@ -42,7 +42,7 @@ public class DefaultCartUseCaseFacade implements CartUseCase {
         List<CartItem> cartItems = this.cartQueryService.fetchCartItems(sessionId);
 
         List<ItemInfoView> items = cartItems.stream()
-                .map(cartItem -> this.itemMapper.toItemInfoView(cartItem.getItem(), cartItem.getQuantity() ))
+                .map(cartItem -> this.itemMapper.toItemInfoView(cartItem.getItemId(), cartItem.getQuantity() ))
                 .toList();
 
         Long totalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);

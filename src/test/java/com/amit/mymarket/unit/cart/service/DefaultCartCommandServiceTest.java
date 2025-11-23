@@ -171,12 +171,12 @@ class DefaultCartCommandServiceTest {
         Item item1 = mock(Item.class);
         when(item1.getId()).thenReturn(101L);
         CartItem cartItem1 = mock(CartItem.class);
-        when(cartItem1.getItem()).thenReturn(item1);
+        when(cartItem1.getItemId()).thenReturn(item1);
 
         Item item2 = mock(Item.class);
         when(item2.getId()).thenReturn(202L);
         CartItem cartItem2 = mock(CartItem.class);
-        when(cartItem2.getItem()).thenReturn(item2);
+        when(cartItem2.getItemId()).thenReturn(item2);
 
         Cart cart = mock(Cart.class);
         when(cart.getId()).thenReturn(13L);

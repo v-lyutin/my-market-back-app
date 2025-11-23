@@ -74,10 +74,10 @@ public class DefaultCheckoutService implements CheckoutService {
     private List<OrderItem> toOrderItems(Order order, Collection<CartItem> cartItems) {
         return cartItems.stream()
                 .map(cartItem -> {
-                    Item item = cartItem.getItem();
+                    Item item = cartItem.getItemId();
                     OrderItem orderItem = new OrderItem();
-                    orderItem.setOrder(order);
-                    orderItem.setItem(item);
+                    orderItem.setOrderId(order);
+                    orderItem.setItemId(item);
                     orderItem.setTitleSnapshot(item.getTitle());
                     orderItem.setPriceMinorSnapshot(item.getPriceMinor());
                     orderItem.setQuantity(cartItem.getQuantity());
@@ -87,7 +87,7 @@ public class DefaultCheckoutService implements CheckoutService {
     }
 
     private void clearCart(Cart cart, Collection<CartItem> cartItems) {
-        cartItems.forEach(cartItem -> this.cartItemRepository.deleteCartItem(cart.getId(), cartItem.getItem().getId()));
+        cartItems.forEach(cartItem -> this.cartItemRepository.deleteCartItem(cart.getId(), cartItem.getItemId().getId()));
         cart.setStatus(CartStatus.ORDERED);
         this.cartRepository.save(cart);
     }

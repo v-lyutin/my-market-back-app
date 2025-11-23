@@ -1,7 +1,6 @@
 package com.amit.mymarket.cart.repository;
 
 import com.amit.mymarket.cart.domain.entity.CartItem;
-import com.amit.mymarket.cart.domain.entity.CartItemId;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

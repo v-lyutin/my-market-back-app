@@ -1,53 +1,30 @@
 package com.amit.mymarket.order.domain.entity;
 
 import com.amit.mymarket.order.domain.type.OrderStatus;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import org.hibernate.Hibernate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Objects;
 
-@Entity
 @Table(schema = "shop", name = "orders")
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "session_id", length = 128)
+    @Column(value = "session_id")
     private String sessionId;
 
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(value = "status")
     private OrderStatus status = OrderStatus.CREATED;
 
     @Min(value = 0)
-    @Column(name = "total_minor", nullable = false)
+    @Column(value = "total_minor")
     private Long totalMinor;
 
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<OrderItem> items = new ArrayList<>();
-
     public Order() {}
-
-    @PrePersist
-    void prePersist() {
-        this.createdAt = OffsetDateTime.now();
-    }
-
-    public void addOrderItem(OrderItem orderItem) {
-        this.items.add(orderItem);
-        orderItem.setOrder(this);
-    }
-    public void removeOrderItem(OrderItem orderItem) {
-        this.items.remove(orderItem);
-        orderItem.setOrder(null);
-    }
 
     public Long getId() {
         return this.id;
@@ -81,38 +58,16 @@ public class Order {
         this.totalMinor = totalMinor;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return this.createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public List<OrderItem> getItems() {
-        return Collections.unmodifiableList(this.items);
-    }
-
-    public void setItems(List<OrderItem> items) {
-        this.items.clear();
-        if (items != null) {
-            items.forEach(this::addOrderItem);
-        }
-    }
-
     @Override
     public boolean equals(Object otherObject) {
-        if (this == otherObject) {
-            return true;
-        }
-        if (otherObject == null) {
-            return false;
-        }
-        if (Hibernate.getClass(this) != Hibernate.getClass(otherObject)) {
+        if (otherObject == null || getClass() != otherObject.getClass()) {
             return false;
         }
         Order otherOrder = (Order) otherObject;
-        return this.id != null && this.id.equals(otherOrder.id);
+        return Objects.equals(this.id, otherOrder.id)
+                && Objects.equals(this.sessionId, otherOrder.sessionId)
+                && this.status == otherOrder.status
+                && Objects.equals(this.totalMinor, otherOrder.totalMinor);
     }
 
     @Override
@@ -127,7 +82,6 @@ public class Order {
                 ", sessionId='" + this.sessionId +
                 ", status=" + this.status +
                 ", totalMinor=" + this.totalMinor +
-                ", createdAt=" + this.createdAt +
                 '}';
     }
 
