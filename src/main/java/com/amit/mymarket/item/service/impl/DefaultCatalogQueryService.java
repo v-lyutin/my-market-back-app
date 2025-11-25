@@ -6,7 +6,7 @@ import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.repository.ItemRepository;
-import com.amit.mymarket.item.repository.projection.ItemWithCountRow;
+import com.amit.mymarket.item.repository.projection.ItemWithQuantity;
 import com.amit.mymarket.item.service.CatalogQueryService;
 import com.amit.mymarket.item.service.util.SearchNormalizer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +36,14 @@ public class DefaultCatalogQueryService implements CatalogQueryService {
     @Override
     public Page<Item> fetchCatalogPage(String search, SortType sortType, int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(Math.max(pageNumber - 1, 0), Math.max(pageSize, 1));
-        Page<ItemWithCountRow> itemWithCountRowPage = this.itemRepository.findCatalogWithCounts(
+        Page<ItemWithQuantity> itemWithCountRowPage = this.itemRepository.findCatalogWithCounts(
                 null,
                 SearchNormalizer.normalizeSearch(search),
                 sortType.name(),
                 pageable
         );
         List<Long> itemIds = itemWithCountRowPage.getContent().stream()
-                .map(ItemWithCountRow::getId)
+                .map(ItemWithQuantity::getId)
                 .toList();
         if (itemIds.isEmpty()) {
             return Page.empty(pageable);
@@ -60,7 +60,7 @@ public class DefaultCatalogQueryService implements CatalogQueryService {
 
     @Override
     public int fetchCartQuantityForItem(String sessionId, long itemId) {
-        ItemWithCountRow itemWithCountRow = this.itemRepository.findItemWithCount(itemId, sessionId);
+        ItemWithQuantity itemWithCountRow = this.itemRepository.findItemWithCount(itemId, sessionId);
         if (itemWithCountRow == null) {
             return 0;
         }

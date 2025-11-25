@@ -3,7 +3,7 @@ package com.amit.mymarket.order.service.impl;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.repository.OrderRepository;
-import com.amit.mymarket.order.repository.projection.OrderHeaderRow;
+import com.amit.mymarket.order.repository.projection.OrderHeader;
 import com.amit.mymarket.order.service.OrderQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class DefaultOrderQueryService implements OrderQueryService {
     @Override
     public List<Order> fetchOrdersBySession(String sessionId) {
         List<Long> orderIds = this.orderRepository.findOrdersBySession(sessionId).stream()
-                .map(OrderHeaderRow::getId)
+                .map(OrderHeader::getId)
                 .toList();
         if (orderIds.isEmpty()) {
             return Collections.emptyList();
@@ -40,7 +40,7 @@ public class DefaultOrderQueryService implements OrderQueryService {
 
     @Override
     public Order fetchOrderByIdForSession(long orderId, String sessionId) {
-        Optional<OrderHeaderRow> orderHeaderRow = this.orderRepository.findOrderHeader(orderId, sessionId);
+        Optional<OrderHeader> orderHeaderRow = this.orderRepository.findOrderHeader(orderId, sessionId);
         if (orderHeaderRow.isEmpty()) {
             throw new ResourceNotFoundException("Order not found for session: id=" + orderId);
         }

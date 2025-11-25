@@ -86,19 +86,19 @@ class DefaultCartQueryServiceTest {
     @DisplayName(value = "Should return 0 when repository returns null for cart total")
     void calculateCartTotal_shouldReturnZeroWhenRepositoryReturnsNull() {
         String sessionId = "session-3";
-        when(this.cartItemRepository.calculateCartTotal(sessionId)).thenReturn(null);
+        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(null);
 
         long cartTotalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);
 
         assertThat(cartTotalMinor).isZero();
-        verify(this.cartItemRepository).calculateCartTotal(sessionId);
+        verify(this.cartItemRepository).calculateCartTotalPrice(sessionId);
     }
 
     @Test
     @DisplayName(value = "Should return the repository value when it is not null")
     void calculateCartTotalMinor_shouldReturnValueWhenRepositoryReturnsNonNull() {
         String sessionId = "session-4";
-        when(this.cartItemRepository.calculateCartTotal(sessionId)).thenReturn(12345L);
+        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(12345L);
 
         long cartTotalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);
 

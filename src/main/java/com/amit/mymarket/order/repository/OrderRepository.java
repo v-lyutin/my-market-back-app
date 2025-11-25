@@ -1,33 +1,28 @@
 package com.amit.mymarket.order.repository;
 
 import com.amit.mymarket.order.domain.entity.Order;
-import com.amit.mymarket.order.repository.projection.OrderHeaderRow;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import com.amit.mymarket.order.repository.projection.OrderHeader;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends ReactiveCrudRepository<Order, Long> {
 
     @Query(value = """
             select orders.id as id,
                    orders.total_minor as totalMinor
             from shop.orders
             where orders.session_id = :sessionId
-            order by orders.created_at desc
-            """,
-            nativeQuery = true)
-    List<OrderHeaderRow> findOrdersBySession(@Param(value = "sessionId") String sessionId);
+            """)
+    Flux<OrderHeader> findOrdersBySession(String sessionId);
 
     @Query(value = """
             select orders.id as id,
                    orders.total_minor as totalMinor
             from shop.orders
             where orders.id = :orderId and orders.session_id = :sessionId
-            """,
-            nativeQuery = true)
-    Optional<OrderHeaderRow> findOrderHeader(@Param(value = "orderId") long orderId, @Param(value = "sessionId") String sessionId);
+            """)
+    Mono<OrderHeader> findOrderHeader(long orderId, String sessionId);
 
 }

@@ -7,50 +7,69 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
-
-import java.util.Optional;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
+@DisplayName(value = "CartRepository integration tests")
+@Sql(
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        statements = {
+                "insert into shop.carts (id, session_id) values (1, 'session-123');",
+                "insert into shop.carts (id, session_id, status) values (2, 'session-123', 'ORDERED');",
+                "insert into shop.carts (id, session_id) values (3, 'other-session');"
+        }
+)
+@Sql(
+        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
+        statements = {
+                "delete from shop.carts;"
+        }
+)
 class CartRepositoryIT extends AbstractRepositoryIT {
 
     @Autowired
     private CartRepository cartRepository;
 
     @Test
-    @DisplayName(value = "Should find cart by session id and status when the cart exists")
-    @Sql(statements = {
-            "insert into shop.carts (id, session_id) values (100, 'session-1')",
-            "insert into shop.carts (id, session_id, status) values (101, 'session-1', 'ABANDONED')",
-            "insert into shop.carts (id, session_id) values (102, 'session-2')"
-    })
-    void findBySessionIdAndStatus_shouldFindCartBySessionIdAndStatusWhenTheCartExists() {
-        Optional<Cart> optionalCart = this.cartRepository.findBySessionIdAndStatus("session-1", CartStatus.ACTIVE);
+    @DisplayName(value = "Should return cart when cart with given session identifier and status exists")
+    void findBySessionIdAndStatus_shouldReturnCartWhenCartWithGivenSessionIdentifierAndStatusExists() {
+        String sessionId = "session-123";
+        CartStatus cartStatus = CartStatus.ACTIVE;
 
-        assertThat(optionalCart).isPresent();
-        Cart cart = optionalCart.orElseThrow();
+        Mono<Cart> cartMono = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
 
-        assertThat(cart.getSessionId()).isEqualTo("session-1");
-        assertThat(cart.getStatus()).isEqualTo(CartStatus.ACTIVE);
+        StepVerifier.create(cartMono)
+                .assertNext(cart -> {
+                    assertThat(cart.getId()).isEqualTo(1L);
+                    assertThat(cart.getSessionId()).isEqualTo("session-123");
+                    assertThat(cart.getStatus()).isEqualTo(CartStatus.ACTIVE);
+                })
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty when cart with given session id does not have the requested status")
-    @Sql(statements = {
-            "insert into shop.carts (id, session_id, status) values (200, 'session-3', 'ABANDONED')"
-    })
-    void findBySessionIdAndStatus_shouldReturnEmptyWhenCartWithGivenSessionIdDoesNotHaveTheRequestedStatus() {
-        Optional<Cart> cart = this.cartRepository.findBySessionIdAndStatus("session-3", CartStatus.ACTIVE);
+    @DisplayName(value = "Should return empty result when cart with given session identifier exists but status does not match")
+    void findBySessionIdAndStatus_shouldReturnEmptyResultWhenStatusDoesNotMatchForSessionIdentifier() {
+        String sessionId = "session-123";
+        CartStatus cartStatus = CartStatus.ABANDONED;
 
-        assertThat(cart).isNotPresent();
+        Mono<Cart> cart = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
+
+        StepVerifier.create(cart).verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty when no cart exists for the given session id")
-    void findBySessionIdAndStatus_shouldReturnEmptyWhenNoCartExistsForTheGivenSessionId() {
-        Optional<Cart> cart = this.cartRepository.findBySessionIdAndStatus("missing-session", CartStatus.ACTIVE);
+    @DisplayName(value = "Should return empty result when cart with given session identifier does not exist")
+    void findBySessionIdAndStatus_shouldReturnEmptyResultWhenSessionIdentifierDoesNotExist() {
+        String sessionId = "unknown-session";
+        CartStatus cartStatus = CartStatus.ACTIVE;
 
-        assertThat(cart).isNotPresent();
+        Mono<Cart> cart = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
+
+        StepVerifier.create(cart).verifyComplete();
     }
 
 }

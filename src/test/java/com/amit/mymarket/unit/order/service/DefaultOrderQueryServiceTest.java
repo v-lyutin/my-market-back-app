@@ -3,7 +3,7 @@ package com.amit.mymarket.unit.order.service;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.repository.OrderRepository;
-import com.amit.mymarket.order.repository.projection.OrderHeaderRow;
+import com.amit.mymarket.order.repository.projection.OrderHeader;
 import com.amit.mymarket.order.service.impl.DefaultOrderQueryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,11 +47,11 @@ class DefaultOrderQueryServiceTest {
     void fetchOrdersBySession_shouldReturnOrdersInHeaderOrderAndSkipMissingOnes() {
         String sessionId = "session-1";
 
-        OrderHeaderRow orderHeaderRow1 = mock(OrderHeaderRow.class);
+        OrderHeader orderHeaderRow1 = mock(OrderHeader.class);
         when(orderHeaderRow1.getId()).thenReturn(1L);
-        OrderHeaderRow orderHeaderRow2 = mock(OrderHeaderRow.class);
+        OrderHeader orderHeaderRow2 = mock(OrderHeader.class);
         when(orderHeaderRow2.getId()).thenReturn(2L);
-        OrderHeaderRow orderHeaderRow3 = mock(OrderHeaderRow.class);
+        OrderHeader orderHeaderRow3 = mock(OrderHeader.class);
         when(orderHeaderRow3.getId()).thenReturn(3L);
 
         when(this.orderRepository.findOrdersBySession(sessionId)).thenReturn(List.of(orderHeaderRow3, orderHeaderRow1, orderHeaderRow2));
@@ -89,7 +89,7 @@ class DefaultOrderQueryServiceTest {
         long orderId = 11L;
         String sessionId = "session-3";
 
-        OrderHeaderRow header = mock(OrderHeaderRow.class);
+        OrderHeader header = mock(OrderHeader.class);
         when(this.orderRepository.findOrderHeader(orderId, sessionId)).thenReturn(Optional.of(header));
 
         Order entity = mock(Order.class);
@@ -108,7 +108,7 @@ class DefaultOrderQueryServiceTest {
         long orderId = 12L;
         String sessionId = "session-4";
 
-        OrderHeaderRow orderHeaderRow = mock(OrderHeaderRow.class);
+        OrderHeader orderHeaderRow = mock(OrderHeader.class);
         when(this.orderRepository.findOrderHeader(orderId, sessionId)).thenReturn(Optional.of(orderHeaderRow));
         when(this.orderRepository.findById(orderId)).thenReturn(Optional.empty());
 

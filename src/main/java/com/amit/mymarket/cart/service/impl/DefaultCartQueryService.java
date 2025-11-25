@@ -41,7 +41,7 @@ public class DefaultCartQueryService implements CartQueryService {
 
     @Override
     public long calculateCartTotalMinor(String sessionId) {
-        Long cartTotalMinor = this.cartItemRepository.calculateCartTotal(sessionId);
+        Long cartTotalMinor = this.cartItemRepository.calculateCartTotalPrice(sessionId);
         return cartTotalMinor != null ? cartTotalMinor : 0L;
     }
 

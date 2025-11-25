@@ -22,7 +22,6 @@ public class Item {
     @Column(value = "img_path")
     private String imagePath;
 
-    @Min(value = 0)
     @Column(value = "price_minor")
     private Long priceMinor;
 

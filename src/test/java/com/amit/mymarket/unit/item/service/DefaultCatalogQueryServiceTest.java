@@ -7,7 +7,7 @@ import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.repository.ItemRepository;
-import com.amit.mymarket.item.repository.projection.ItemWithCountRow;
+import com.amit.mymarket.item.repository.projection.ItemWithQuantity;
 import com.amit.mymarket.item.service.impl.DefaultCatalogQueryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class DefaultCatalogQueryServiceTest {
     }
 
     @Test
-    @DisplayName(value = "Should return zero when item-with-count projection is null")
+    @DisplayName(value = "Should return zero when item-with-quantity projection is null")
     void fetchCartQuantityForItem_shouldReturnZeroWhenItemWithCountProjectionIsNull() {
         when(this.itemRepository.findItemWithCount(100L, "session-1")).thenReturn(null);
 
@@ -61,9 +61,9 @@ class DefaultCatalogQueryServiceTest {
     }
 
     @Test
-    @DisplayName(value = "Should return zero when item-with-count projection has null quantity")
+    @DisplayName(value = "Should return zero when item-with-quantity projection has null quantity")
     void fetchCartQuantityForItem_shouldReturnZeroWhenItemWithCountProjectionHasNullQuantity() {
-        ItemWithCountRow itemWithCountRow = mock(ItemWithCountRow.class);
+        ItemWithQuantity itemWithCountRow = mock(ItemWithQuantity.class);
         when(itemWithCountRow.getCount()).thenReturn(null);
         when(this.itemRepository.findItemWithCount(200L, "session-2")).thenReturn(itemWithCountRow);
 
@@ -73,9 +73,9 @@ class DefaultCatalogQueryServiceTest {
     }
 
     @Test
-    @DisplayName(value = "Should return quantity from item-with-count projection when present")
+    @DisplayName(value = "Should return quantity from item-with-quantity projection when present")
     void findItemWithCount_shouldReturnQuantityFromItemWithCountProjectionWhenPresent() {
-        ItemWithCountRow itemWithCountRow = mock(ItemWithCountRow.class);
+        ItemWithQuantity itemWithCountRow = mock(ItemWithQuantity.class);
         when(itemWithCountRow.getCount()).thenReturn(5);
         when(this.itemRepository.findItemWithCount(300L, "session-3")).thenReturn(itemWithCountRow);
 
