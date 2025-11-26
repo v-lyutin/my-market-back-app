@@ -31,7 +31,7 @@ public class OrderUseCaseFacade implements OrderUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<OrderDto> getOrders(String sessionId) {
-        List<Order> orders = this.orderQueryService.fetchOrdersBySession(sessionId);
+        List<Order> orders = this.orderQueryService.getOrdersBySession(sessionId);
         return orders.stream()
                 .map(this.orderMapper::toOrderDto)
                 .toList();
@@ -40,7 +40,7 @@ public class OrderUseCaseFacade implements OrderUseCase {
     @Override
     @Transactional(readOnly = true)
     public OrderDto getOrder(String sessionId, long orderId) {
-        Order order = this.orderQueryService.fetchOrderByIdForSession(orderId, sessionId);
+        Order order = this.orderQueryService.getOrderByIdForSession(orderId, sessionId);
         return this.orderMapper.toOrderDto(order);
     }
 

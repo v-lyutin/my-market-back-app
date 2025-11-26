@@ -1,18 +1,16 @@
 package com.amit.mymarket.order.service;
 
-import com.amit.mymarket.order.service.exception.EmptyCartException;
+import reactor.core.publisher.Mono;
 
 public interface CheckoutService {
 
     /**
      * Creates an order from the session’s active cart:
-     *  - snapshots title/formatPrice/quantity into orders_items,
+     *  - snapshots title/totalMinor/quantity into orders_items,
      *  - calculates and stores total,
      *  - clears the cart,
      * and returns the new order id.
-     *
-     * @throws EmptyCartException if the active cart has no items
      */
-    long createOrderFromActiveCartAndClear(String sessionId);
+    Mono<Long> createOrderFromActiveCartAndClear(String sessionId);
 
 }

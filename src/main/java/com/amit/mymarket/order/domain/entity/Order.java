@@ -26,6 +26,12 @@ public class Order {
 
     public Order() {}
 
+    public Order(String sessionId, long totalMinor) {
+        this.id = null;
+        this.sessionId = sessionId;
+        this.totalMinor = totalMinor;
+    }
+
     public Long getId() {
         return this.id;
     }
