@@ -40,14 +40,14 @@ public class ItemUseCaseFacade implements ItemUseCase {
     @Override
     @Transactional(readOnly = true)
     public CatalogPageDto getCatalogPage(String sessionId, String search, SortType sort, int pageNumber, int pageSize) {
-        Page<Item> page = this.catalogQueryService.fetchCatalogPage(search, sort, pageNumber, pageSize);
+        Page<Item> page = this.catalogQueryService.getCatalogPage(search, sort, pageNumber, pageSize);
         List<Item> items = page.getContent();
 
         List<Long> itemIds = items.stream()
                 .map(Item::getId)
                 .toList();
 
-        Map<Long, Integer> quantities = this.catalogQueryService.fetchCartQuantitiesForItems(sessionId, itemIds);
+        Map<Long, Integer> quantities = this.catalogQueryService.getCartQuantitiesForItems(sessionId, itemIds);
 
         List<ItemInfoView> itemInfoViews = items.stream()
                 .map(item -> this.itemMapper.toItemInfoView(item, quantities.getOrDefault(item.getId(), 0)))
@@ -68,8 +68,8 @@ public class ItemUseCaseFacade implements ItemUseCase {
     @Override
     @Transactional(readOnly = true)
     public ItemInfoView getItem(String sessionId, long itemId) {
-        Item item = this.catalogQueryService.fetchItemOrThrow(itemId);
-        int count = this.catalogQueryService.fetchCartQuantityForItem(sessionId, itemId);
+        Item item = this.catalogQueryService.getItemById(itemId);
+        int count = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
         return this.itemMapper.toItemInfoView(item, count);
     }
 

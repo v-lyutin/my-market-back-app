@@ -23,7 +23,7 @@ public class ItemResource {
     }
 
     @GetMapping
-    public String getItemsPage(@RequestParam(name = "search", required = false) String search,
+    public String getItemsPage(@RequestParam(name = "searchQuery", required = false) String search,
                                @RequestParam(name = "sort", defaultValue = "NO") SortType sort,
                                @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
                                @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
@@ -32,7 +32,7 @@ public class ItemResource {
         String sessionId = httpSession.getId();
         CatalogPageDto catalogPageDto = this.itemUseCase.getCatalogPage(sessionId, search, sort, pageNumber, pageSize);
         model.addAttribute("items", catalogPageDto.items());
-        model.addAttribute("search", catalogPageDto.search());
+        model.addAttribute("searchQuery", catalogPageDto.search());
         model.addAttribute("sort", catalogPageDto.sort());
         model.addAttribute("paging", catalogPageDto.paging());
         return "item/items-view";
@@ -41,14 +41,14 @@ public class ItemResource {
     @PostMapping
     public String mutateItemFromItemsPage(@RequestParam(name = "id") long id,
                                           @RequestParam(name = "action") ItemAction action,
-                                          @RequestParam(name = "search", required = false) String search,
+                                          @RequestParam(name = "searchQuery", required = false) String search,
                                           @RequestParam(name = "sort", defaultValue = "NO") SortType sort,
                                           @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
                                           @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
                                           HttpSession httpSession) {
         String sessionId = httpSession.getId();
         this.itemUseCase.mutateItem(sessionId, id, action);
-        return "redirect:/v1/items?search=" + (search == null ? "" : search)
+        return "redirect:/v1/items?searchQuery=" + (search == null ? "" : search)
                 + "&sort=" + sort
                 + "&pageNumber=" + pageNumber
                 + "&pageSize=" + pageSize;

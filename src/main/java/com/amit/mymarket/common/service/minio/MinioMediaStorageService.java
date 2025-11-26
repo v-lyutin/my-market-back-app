@@ -12,9 +12,15 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 @Service
@@ -34,58 +40,92 @@ public class MinioMediaStorageService implements MediaStorageService {
     }
 
     @Override
-    public String saveMediaFile(MultipartFile file, PathSpecification pathSpecification) {
-        try {
-            if (file == null || file.isEmpty()) {
-                throw new MediaStorageException("Empty file");
+    public Mono<String> saveMediaFile(FilePart file, PathSpecification pathSpecification) {
+        return Mono.defer(() -> {
+            if (file == null || file.filename().isBlank()) {
+                return Mono.error(new MediaStorageException("Empty file"));
             }
-            long size = file.getSize();
-            MediaFileValidator.validateFileSize(size, this.minioStorageProperties.maxFileSizeBytes());
 
-            String mimeType = MimeTypeResolver.resolve(file);
-            MediaFileValidator.validateMimeType(mimeType, this.minioStorageProperties.allowedMimeTypes());
-
-            String key = this.keyNamingStrategy.buildKey(pathSpecification, mimeType);
-
-            try (InputStream inputStream = file.getInputStream()) {
-                PutObjectArgs.Builder builder = PutObjectArgs.builder()
-                        .bucket(this.minioStorageProperties.bucket())
-                        .object(key)
-                        .contentType(mimeType);
-
-                if (size >= 0) {
-                    builder.stream(inputStream, size, -1);
-                } else {
-                    builder.stream(inputStream, -1, 5 * 1024 * 1024);
-                }
-                this.minioClient.putObject(builder.build());
-                return key;
-            }
-        } catch (IllegalArgumentException exception) {
-            throw new MediaStorageException("Validation error: " + exception.getMessage(), exception);
-        } catch (Exception exception) {
-            throw new MediaStorageException("Failed to store object", exception);
-        }
+            return DataBufferUtils.join(file.content())
+                    .switchIfEmpty(Mono.error(new MediaStorageException("Empty file")))
+                    .flatMap(buffer -> {
+                        byte[] bytes = toByteArray(buffer);
+                        return validateAndSave(bytes, file.filename(), pathSpecification);
+                    });
+        });
     }
 
     @Override
-    public void deleteMediaFile(String key) {
-        if (key == null || key.isBlank()) {
-            return;
+    public Mono<Void> deleteMediaFile(String key) {
+        if (!StringUtils.hasText(key)) {
+            return Mono.empty();
         }
+        return Mono.fromRunnable(() -> {
+                    try {
+                        this.minioClient.removeObject(RemoveObjectArgs.builder()
+                                .bucket(this.minioStorageProperties.bucket())
+                                .object(key)
+                                .build());
+                    } catch (ErrorResponseException exception) {
+                        String errorCode = exception.errorResponse().code();
+                        if (!"NoSuchKey".equalsIgnoreCase(errorCode) && !"NoSuchObject".equalsIgnoreCase(errorCode)) {
+                            throw new MediaStorageException("Failed to delete object: " + key, exception);
+                        }
+                    } catch (Exception exception) {
+                        throw new MediaStorageException("Failed to delete object: " + key, exception);
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
+    private byte[] toByteArray(DataBuffer buffer) {
         try {
-            this.minioClient.removeObject(RemoveObjectArgs.builder()
-                    .bucket(this.minioStorageProperties.bucket())
-                    .object(key)
-                    .build());
-        } catch (ErrorResponseException exception) {
-            String errorCode = exception.errorResponse().code();
-            if (!"NoSuchKey".equalsIgnoreCase(errorCode) && !"NoSuchObject".equalsIgnoreCase(errorCode)) {
-                throw new MediaStorageException("Failed to delete object: " + key, exception);
-            }
-        } catch (Exception exception) {
-            throw new MediaStorageException("Failed to delete object: " + key, exception);
+            int size = buffer.readableByteCount();
+            byte[] bytes = new byte[size];
+            buffer.read(bytes);
+            return bytes;
+        } finally {
+            DataBufferUtils.release(buffer);
         }
+    }
+
+    private Mono<String> validateAndSave(byte[] bytes,
+                                         String filename,
+                                         PathSpecification pathSpecification) {
+        long fileSize = bytes.length;
+
+        try {
+            MediaFileValidator.validateFileSize(fileSize, this.minioStorageProperties.maxFileSizeBytes());
+            String mimeType = MimeTypeResolver.resolve(filename, bytes);
+            MediaFileValidator.validateMimeType(mimeType, this.minioStorageProperties.allowedMimeTypes());
+            String key = this.keyNamingStrategy.buildKey(pathSpecification, mimeType);
+
+            return this.uploadContentToMinio(bytes, fileSize, mimeType, key);
+        } catch (IllegalArgumentException exception) {
+            return Mono.error(new MediaStorageException("Validation error: " + exception.getMessage(), exception));
+        } catch (Exception exception) {
+            return Mono.error(new MediaStorageException("Failed to store object", exception));
+        }
+    }
+
+    private Mono<String> uploadContentToMinio(byte[] bytes, long fileSize, String mimeType, String key) {
+        return Mono.fromCallable(() -> {
+                    try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
+                        PutObjectArgs args = PutObjectArgs.builder()
+                                .bucket(this.minioStorageProperties.bucket())
+                                .object(key)
+                                .contentType(mimeType)
+                                .stream(inputStream, fileSize, -1)
+                                .build();
+
+                        this.minioClient.putObject(args);
+                        return key;
+                    } catch (Exception exception) {
+                        throw new MediaStorageException("Failed to store object", exception);
+                    }
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
 }

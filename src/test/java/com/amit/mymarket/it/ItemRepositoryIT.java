@@ -42,7 +42,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     private ItemRepository itemRepository;
 
     @Test
-    @DisplayName(value = "Should return all items with correct quantities for active session without search filter")
+    @DisplayName(value = "Should return all items with correct quantities for active session without searchQuery filter")
     void searchItemsWithQuantity_shouldReturnAllItemsForSessionWithoutSearchFilter() {
         String sessionId = "session-123";
         String searchQuery = null;
@@ -75,7 +75,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should filter items by search term in title or description")
+    @DisplayName(value = "Should filter items by searchQuery term in title or description")
     void searchItemsWithQuantity_shouldFilterBySearchTermInTitleOrDescription() {
         String sessionId = "session-123";
         String searchQuery = "apple";
@@ -209,7 +209,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should count items matching search query")
+    @DisplayName(value = "Should count items matching searchQuery query")
     void countItemsBySearchQuery_shouldReturnNumberOfMatchingItems() {
         String searchQuery = "a"; // Apple, Banana, Carrot
 
@@ -221,7 +221,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should count all items when search query is null")
+    @DisplayName(value = "Should count all items when searchQuery query is null")
     void countItemsBySearchQuery_shouldReturnAllItemsWhenSearchQueryIsNull() {
         String searchQuery = null;
 

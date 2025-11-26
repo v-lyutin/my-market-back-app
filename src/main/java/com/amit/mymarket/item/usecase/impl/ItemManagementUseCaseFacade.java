@@ -32,7 +32,7 @@ public class ItemManagementUseCaseFacade implements ItemManagementUseCase {
 
     @Override
     public void replacePrimaryItemImage(long itemId, MultipartFile file) {
-        this.itemManagementService.replacePrimaryItemImage(itemId, file);
+        this.itemManagementService.replaceItemImage(itemId, file);
     }
 
     @Override
@@ -43,12 +43,12 @@ public class ItemManagementUseCaseFacade implements ItemManagementUseCase {
 
     @Override
     public void deleteItemCompletely(long itemId) {
-        this.itemManagementService.deleteItemCompletely(itemId);
+        this.itemManagementService.deleteItem(itemId);
     }
 
     @Override
     public ItemView fetchItemById(long itemId) {
-        return this.itemMapper.toItemView(this.itemManagementService.fetchItemById(itemId));
+        return this.itemMapper.toItemView(this.itemManagementService.getItemById(itemId));
     }
 
 }
