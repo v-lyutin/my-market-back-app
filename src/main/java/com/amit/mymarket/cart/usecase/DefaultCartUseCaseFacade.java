@@ -39,13 +39,13 @@ public class DefaultCartUseCaseFacade implements CartUseCase {
     @Override
     @Transactional(readOnly = true)
     public CartViewDto getCart(String sessionId) {
-        List<CartItem> cartItems = this.cartQueryService.fetchCartItems(sessionId);
+        List<CartItem> cartItems = this.cartQueryService.getCartItems(sessionId);
 
         List<ItemInfoView> items = cartItems.stream()
                 .map(cartItem -> this.itemMapper.toItemInfoView(cartItem.getItemId(), cartItem.getQuantity() ))
                 .toList();
 
-        Long totalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);
+        Long totalMinor = this.cartQueryService.calculateCartTotalPrice(sessionId);
         return this.cartMapper.toCartViewDto(items, totalMinor);
     }
 

@@ -14,7 +14,7 @@ public interface CartItemRepository extends ReactiveCrudRepository<com.amit.myma
                    items.description as description,
                    items.img_path as imagePath,
                    items.price_minor as priceMinor,
-                   carts_items.quantity as count
+                   carts_items.quantity as quantity
             from shop.carts
             join shop.carts_items on carts_items.cart_id = carts.id
             join shop.items on items.id = carts_items.item_id
@@ -63,5 +63,11 @@ public interface CartItemRepository extends ReactiveCrudRepository<com.amit.myma
             where cart_id = :cartId and item_id = :itemId
             """)
     Mono<Integer> deleteCartItem(long cartId, long itemId);
+
+    @Query("""
+        DELETE FROM shop.carts_items
+        WHERE cart_id = :cartId
+        """)
+    Mono<Void> deleteByCartId(Long cartId);
 
 }
