@@ -1,7 +1,6 @@
 package com.amit.mymarket.order.usecase.impl;
 
 import com.amit.mymarket.order.api.dto.OrderDto;
-import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.service.CheckoutService;
 import com.amit.mymarket.order.service.OrderQueryService;
 import com.amit.mymarket.order.usecase.OrderUseCase;
@@ -9,6 +8,7 @@ import com.amit.mymarket.order.usecase.mapper.OrderMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -30,23 +30,22 @@ public class OrderUseCaseFacade implements OrderUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderDto> getOrders(String sessionId) {
-        List<Order> orders = this.orderQueryService.getOrdersBySession(sessionId);
-        return orders.stream()
+    public Mono<List<OrderDto>> getOrdersBySession(String sessionId) {
+        return this.orderQueryService.getOrdersBySession(sessionId)
                 .map(this.orderMapper::toOrderDto)
-                .toList();
+                .collectList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OrderDto getOrder(String sessionId, long orderId) {
-        Order order = this.orderQueryService.getOrderByIdForSession(orderId, sessionId);
-        return this.orderMapper.toOrderDto(order);
+    public Mono<OrderDto> getOrderByIdForSession(String sessionId, long orderId) {
+        return this.orderQueryService.getOrderByIdForSession(orderId, sessionId)
+                .map(this.orderMapper::toOrderDto);
     }
 
     @Override
     @Transactional
-    public long checkout(String sessionId) {
+    public Mono<Long> createOrderFromActiveCartAndClear(String sessionId) {
         return this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
     }
 

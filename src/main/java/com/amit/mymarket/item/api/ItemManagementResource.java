@@ -41,14 +41,14 @@ public class ItemManagementResource {
 
     @GetMapping(path = "/{id}")
     public String fetchItemById(@PathVariable long id, Model model) {
-        ItemView item = this.itemManagementUseCase.fetchItemById(id);
+        ItemView item = this.itemManagementUseCase.getItemById(id);
         model.addAttribute("item", item);
         return "item/management/view/item-management-view";
     }
 
     @GetMapping(path = "/{id}/edit")
     public String showEditForm(@PathVariable long id, Model model) {
-        ItemView item = this.itemManagementUseCase.fetchItemById(id);
+        ItemView item = this.itemManagementUseCase.getItemById(id);
         model.addAttribute("itemId", id);
         model.addAttribute("form", new UpdateItemForm(
                 item.title(),
@@ -71,14 +71,14 @@ public class ItemManagementResource {
     public String replacePrimaryItemImage(@PathVariable long id,
                                           @RequestParam(value = "file") MultipartFile file,
                                           RedirectAttributes redirectAttributes) {
-        this.itemManagementUseCase.replacePrimaryItemImage(id, file);
+        this.itemManagementUseCase.replaceItemImage(id, file);
         redirectAttributes.addFlashAttribute("success", "Изображение заменено");
         return "redirect:/v1/management/items/" + id;
     }
 
     @PostMapping(path = "/{id}/delete")
     public String deleteItemCompletely(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        this.itemManagementUseCase.deleteItemCompletely(id);
+        this.itemManagementUseCase.deleteItem(id);
         redirectAttributes.addFlashAttribute("success", "Товар удалён");
         return "redirect:/v1/management/items/new";
     }

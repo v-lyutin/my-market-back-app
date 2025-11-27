@@ -1,15 +1,16 @@
 package com.amit.mymarket.order.usecase;
 
 import com.amit.mymarket.order.api.dto.OrderDto;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 public interface OrderUseCase {
 
-    List<OrderDto> getOrders(String sessionId);
+    Mono<List<OrderDto>> getOrdersBySession(String sessionId);
 
-    OrderDto getOrder(String sessionId, long orderId);
+    Mono<OrderDto> getOrderByIdForSession(String sessionId, long orderId);
 
-    long checkout(String sessionId);
+    Mono<Long> createOrderFromActiveCartAndClear(String sessionId);
 
 }

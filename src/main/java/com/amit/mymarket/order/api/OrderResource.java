@@ -23,7 +23,7 @@ public class OrderResource {
 
     @GetMapping
     public String getOrders(Model model, HttpSession httpSession) {
-        List<OrderDto> orders = this.orderUseCase.getOrders(httpSession.getId());
+        List<OrderDto> orders = this.orderUseCase.getOrdersBySession(httpSession.getId());
         model.addAttribute("orders", orders);
         return "order/orders-view";
     }
@@ -33,7 +33,7 @@ public class OrderResource {
                            @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
                            Model model,
                            HttpSession httpSession) {
-        OrderDto order = this.orderUseCase.getOrder(httpSession.getId(), id);
+        OrderDto order = this.orderUseCase.getOrderByIdForSession(httpSession.getId(), id);
         model.addAttribute("order", order);
         model.addAttribute("newOrder", newOrder);
         return "order/order-view";
@@ -41,7 +41,7 @@ public class OrderResource {
 
     @PostMapping
     public String checkout(HttpSession httpSession) {
-        long newOrderId = this.orderUseCase.checkout(httpSession.getId());
+        long newOrderId = this.orderUseCase.createOrderFromActiveCartAndClear(httpSession.getId());
         return "redirect:/v1/orders/" + newOrderId + "?newOrder=true";
     }
 

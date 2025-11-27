@@ -1,5 +1,6 @@
 package com.amit.mymarket.item.api.mapper;
 
+import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.item.api.dto.CreateItemForm;
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.ItemView;
@@ -15,5 +16,7 @@ public interface ItemMapper {
     ItemView toItemView(Item item);
 
     ItemInfoView toItemInfoView(Item item, int quantity);
+
+    ItemInfoView toItemInfoView(CartItemRow cartItemRow);
 
 }

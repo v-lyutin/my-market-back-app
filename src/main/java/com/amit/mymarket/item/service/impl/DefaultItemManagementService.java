@@ -10,7 +10,6 @@ import com.amit.mymarket.item.service.ItemManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
@@ -28,7 +27,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     }
 
     @Override
-    @Transactional
     public Mono<Item> createItemAndOptionallyUploadImage(Item itemToCreate, FilePart file) {
         if (itemToCreate == null) {
             return Mono.error(new ServiceException("Item is null"));
@@ -49,7 +47,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     }
 
     @Override
-    @Transactional
     public Mono<Void> replaceItemImage(long itemId, FilePart file) {
         if (file == null) {
             return Mono.error(new ServiceException("Image file is null"));
@@ -76,7 +73,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     }
 
     @Override
-    @Transactional
     public Mono<Item> updateItemAttributes(long itemId, Item itemToUpdate) {
         return this.itemRepository.findById(itemId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Item not found: " + itemId)))
@@ -95,7 +91,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     }
 
     @Override
-    @Transactional
     public Mono<Void> deleteItem(long itemId) {
         return this.itemRepository.findById(itemId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Item not found: " + itemId)))
@@ -112,7 +107,6 @@ public class DefaultItemManagementService implements ItemManagementService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Mono<Item> getItemById(long itemId) {
         return this.itemRepository.findById(itemId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Item not found: " + itemId)));
