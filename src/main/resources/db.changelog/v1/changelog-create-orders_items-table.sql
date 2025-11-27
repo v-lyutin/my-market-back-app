@@ -10,7 +10,7 @@ CREATE TABLE ${schemaName}.orders_items (
   quantity              INTEGER NOT NULL,
   CONSTRAINT fk_orders_items_orders FOREIGN KEY (order_id) REFERENCES ${schemaName}.orders(id) ON DELETE CASCADE,
   CONSTRAINT fk_orders_items_items FOREIGN KEY (item_id) REFERENCES ${schemaName}.items(id),
-  CONSTRAINT uq_carts_items_cart_item UNIQUE (order_id, item_id)
+  CONSTRAINT uq_orders_items_cart_item UNIQUE (order_id, item_id),
   CONSTRAINT chk_orders_items_price_nonneg CHECK (price_minor_snapshot >= 0),
   CONSTRAINT chk_orders_items_quantity_pos CHECK (quantity > 0)
 );

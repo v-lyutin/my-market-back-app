@@ -3,35 +3,57 @@ package com.amit.mymarket.it;
 import com.amit.mymarket.cart.domain.entity.Cart;
 import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
-@DisplayName(value = "CartRepository integration tests")
-@Sql(
-        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-        statements = {
-                "insert into shop.carts (id, session_id) values (1, 'session-123');",
-                "insert into shop.carts (id, session_id, status) values (2, 'session-123', 'ORDERED');",
-                "insert into shop.carts (id, session_id) values (3, 'other-session');"
-        }
-)
-@Sql(
-        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
-        statements = {
-                "delete from shop.carts;"
-        }
-)
 class CartRepositoryIT extends AbstractRepositoryIT {
 
     @Autowired
     private CartRepository cartRepository;
+
+    @Autowired
+    private DatabaseClient databaseClient;
+
+    @BeforeEach
+    void setUpTestData() {
+        Mono<Void> setupFlow = this.databaseClient.sql("delete from shop.carts_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.carts")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("""
+                                insert into shop.carts (id, session_id, status) values
+                                (1, 'session-123',  'ACTIVE'),
+                                (2, 'session-123',  'ORDERED'),
+                                (3, 'other-session', 'ACTIVE')
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+
+        setupFlow.block();
+    }
+
+    @AfterEach
+    void cleanUpTestData() {
+        Mono<Void> cleanupFlow = this.databaseClient.sql("delete from shop.carts_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.carts")
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        cleanupFlow.block();
+    }
 
     @Test
     @DisplayName(value = "Should return cart when cart with given session identifier and status exists")

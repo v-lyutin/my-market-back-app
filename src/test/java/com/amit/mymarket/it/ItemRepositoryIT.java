@@ -2,44 +2,82 @@ package com.amit.mymarket.it;
 
 import com.amit.mymarket.item.repository.ItemRepository;
 import com.amit.mymarket.item.repository.projection.ItemWithQuantity;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName(value = "ItemRepository integration tests")
-@Sql(
-        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-        statements = {
-                "insert into shop.items (id, title, description, img_path, price_minor) values (1, 'Apple', 'Fresh green apple', '/images/apple.png', 100);",
-                "insert into shop.items (id, title, description, img_path, price_minor) values (2, 'Banana', 'Yellow banana', '/images/banana.png', 50);",
-                "insert into shop.items (id, title, description, img_path, price_minor) values (3, 'Carrot', 'Orange carrot', '/images/carrot.png', 75);",
-
-                "insert into shop.carts (id, session_id) values (1, 'session-123');",
-                "insert into shop.carts (id, session_id) values (2, 'other-session');",
-
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (1, 1, 2);",
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (1, 3, 5);",
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (2, 2, 7);"
-        }
-)
-@Sql(
-        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
-        statements = {
-                "delete from shop.carts_items;",
-                "delete from shop.carts;",
-                "delete from shop.items;"
-        }
-)
 class ItemRepositoryIT extends AbstractRepositoryIT {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private DatabaseClient databaseClient;
+
+    @BeforeEach
+    void setUpTestData() {
+        Mono<Void> setupFlow = this.databaseClient.sql("delete from shop.carts_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.carts")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("delete from shop.items")
+                        .fetch()
+                        .rowsUpdated())
+                // items
+                .then(this.databaseClient.sql("""
+                                insert into shop.items (id, title, description, img_path, price_minor) values
+                                (1, 'Apple', 'Fresh green apple', '/images/apple.png',  100),
+                                (2, 'Banana', 'Yellow banana', '/images/banana.png', 50),
+                                (3, 'Carrot', 'Orange carrot', '/images/carrot.png', 75)
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                // carts
+                .then(this.databaseClient.sql("""
+                                insert into shop.carts (id, session_id) values
+                                (1, 'session-123'),
+                                (2, 'other-session')
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                // carts_items
+                .then(this.databaseClient.sql("""
+                                insert into shop.carts_items (cart_id, item_id, quantity) values
+                                (1, 1, 2),
+                                (1, 3, 5),
+                                (2, 2, 7)
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        setupFlow.block();
+    }
+
+    @AfterEach
+    void cleanUpTestData() {
+        Mono<Void> cleanFlow =
+                this.databaseClient.sql("delete from shop.carts_items")
+                        .fetch()
+                        .rowsUpdated()
+                        .then(this.databaseClient.sql("delete from shop.carts")
+                                .fetch()
+                                .rowsUpdated())
+                        .then(this.databaseClient.sql("delete from shop.items")
+                                .fetch()
+                                .rowsUpdated())
+                        .then();
+        cleanFlow.block();
+    }
 
     @Test
     @DisplayName(value = "Should return all items with correct quantities for active session without searchQuery filter")
@@ -131,7 +169,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
         long limit = 10L;
         long offset = 0L;
 
-        Flux<ItemWithQuantity> itemWithQuantityFlux = this.itemRepository.searchItemsWithQuantity(
+        Flux<ItemWithQuantity> itemWithQuantity = this.itemRepository.searchItemsWithQuantity(
                 sessionId,
                 searchQuery,
                 sortType,
@@ -139,7 +177,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
                 offset
         );
 
-        StepVerifier.create(itemWithQuantityFlux.collectList())
+        StepVerifier.create(itemWithQuantity.collectList())
                 .assertNext(itemWithQuantityList -> {
                     assertThat(itemWithQuantityList)
                             .extracting(ItemWithQuantity::priceMinor)

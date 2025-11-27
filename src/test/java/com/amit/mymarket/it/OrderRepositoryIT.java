@@ -2,10 +2,12 @@ package com.amit.mymarket.it;
 
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.repository.OrderRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -14,28 +16,46 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("OrderRepository integration tests")
-@Sql(
-        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-        statements = {
-                // session-123
-                "insert into shop.orders (id, session_id, total_minor) values (1, 'session-123', 500);",
-                "insert into shop.orders (id, session_id, total_minor) values (2, 'session-123', 750);",
-
-                // another-session
-                "insert into shop.orders (id, session_id, total_minor) values (3, 'another-session', 1000);"
-        }
-)
-@Sql(
-        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
-        statements = {
-                "delete from shop.orders;"
-        }
-)
 class OrderRepositoryIT extends AbstractRepositoryIT {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private DatabaseClient databaseClient;
+
+    @BeforeEach
+    void setUpTestData() {
+        Mono<Void> setupFlow = this.databaseClient.sql("delete from shop.orders_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.orders")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("""
+                                insert into shop.orders (id, session_id, total_minor) values
+                                (1, 'session-123', 500),
+                                (2, 'session-123', 750),
+                                (3, 'another-session', 1000)
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        setupFlow.block();
+    }
+
+    @AfterEach
+    void cleanUpTestData() {
+        Mono<Void> cleanupFlow = this.databaseClient.sql("delete from shop.orders_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.orders")
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+
+        cleanupFlow.block();
+    }
 
     @Test
     @DisplayName(value = "Should return all orders for given session identifier")

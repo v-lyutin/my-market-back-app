@@ -2,10 +2,12 @@ package com.amit.mymarket.it;
 
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -14,41 +16,72 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName(value = "CartItemRepository integration tests")
-@Sql(
-        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
-        statements = {
-                // items
-                "insert into shop.items (id, title, description, img_path, price_minor) values (1, 'Apple', 'Fresh green apple', '/images/apple.png', 100);",
-                "insert into shop.items (id, title, description, img_path, price_minor) values (2, 'Banana', 'Yellow banana', '/images/banana.png', 50);",
-                "insert into shop.items (id, title, description, img_path, price_minor) values (3, 'Carrot', 'Orange carrot', '/images/carrot.png', 75);",
-
-                // carts
-                "insert into shop.carts (id, session_id) values (1, 'session-123');",
-                "insert into shop.carts (id, session_id, status) values (2, 'session-123', 'ABANDONED');",
-                "insert into shop.carts (id, session_id) values (3, 'another-session');",
-
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (1, 1, 1);",  // Apple
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (1, 2, 2);",  // Banana
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (1, 3, 3);",  // Carrot
-
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (2, 1, 10);",
-
-                "insert into shop.carts_items (cart_id, item_id, quantity) values (3, 1, 2);"
-        }
-)
-@Sql(
-        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
-        statements = {
-                "delete from shop.carts_items;",
-                "delete from shop.carts;",
-                "delete from shop.items;"
-        }
-)
 class CartItemRepositoryIT extends AbstractRepositoryIT {
 
     @Autowired
     private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private DatabaseClient databaseClient;
+
+    @BeforeEach
+    void setUpTestData() {
+        Mono<Void> setupFlow = this.databaseClient.sql("delete from shop.carts_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.carts")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("delete from shop.items")
+                        .fetch()
+                        .rowsUpdated())
+                // items
+                .then(this.databaseClient.sql("""
+                                insert into shop.items (id, title, description, img_path, price_minor) values
+                                (1, 'Apple',  'Fresh green apple', '/images/apple.png',  100),
+                                (2, 'Banana', 'Yellow banana', '/images/banana.png', 50),
+                                (3, 'Carrot', 'Orange carrot', '/images/carrot.png', 75)
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                // carts
+                .then(this.databaseClient.sql("""
+                                insert into shop.carts (id, session_id, status) values
+                                (1, 'session-123', 'ACTIVE'),
+                                (2, 'session-123', 'ABANDONED'),
+                                (3, 'another-session', 'ACTIVE')
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                // carts_items
+                .then(this.databaseClient.sql("""
+                                insert into shop.carts_items (cart_id, item_id, quantity) values
+                                (1, 1, 1),  -- Apple in active cart (session-123)
+                                (1, 2, 2),  -- Banana
+                                (1, 3, 3),  -- Carrot
+                                (2, 1, 10), -- Apple in ABANDONED cart
+                                (3, 1, 2)   -- Apple in another-session cart
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        setupFlow.block();
+    }
+
+    @AfterEach
+    void cleanUpTestData() {
+        Mono<Void> cleanupFlow = this.databaseClient.sql("delete from shop.carts_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.carts")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("delete from shop.items")
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        cleanupFlow.block();
+    }
 
     @Test
     @DisplayName(value = "Should return cart items for active cart with given session identifier sorted by title")
@@ -96,8 +129,8 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
         String sessionId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterIncrementMono = this.cartItemRepository.incrementItemQuantity(cartId, itemId)
-                        .thenMany(this.cartItemRepository.findCartItems(sessionId))
-                        .collectList();
+                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .collectList();
 
         StepVerifier.create(cartItemRowsAfterIncrementMono)
                 .assertNext(cartItemRowList -> {
@@ -121,8 +154,8 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
         String sessionId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterDecrementMono = this.cartItemRepository.decrementWhenItemQuantityGreaterThanOne(cartId, itemId)
-                        .thenMany(this.cartItemRepository.findCartItems(sessionId))
-                        .collectList();
+                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .collectList();
 
         StepVerifier.create(cartItemRowsAfterDecrementMono)
                 .assertNext(cartItemRowList -> {
@@ -146,8 +179,8 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
         String sessionId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterDeleteMono = this.cartItemRepository.deleteCartItem(cartId, itemId)
-                        .thenMany(cartItemRepository.findCartItems(sessionId))
-                        .collectList();
+                .thenMany(cartItemRepository.findCartItems(sessionId))
+                .collectList();
 
         StepVerifier.create(cartItemRowsAfterDeleteMono)
                 .assertNext(cartItemRowList -> {
@@ -156,7 +189,7 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
                             .containsExactly("Apple", "Carrot");
 
                     boolean hasBananaCartItem = cartItemRowList.stream()
-                                    .anyMatch(cartItemRow -> "Banana".equals(cartItemRow.title()));
+                            .anyMatch(cartItemRow -> "Banana".equals(cartItemRow.title()));
 
                     assertThat(hasBananaCartItem).isFalse();
                 })
@@ -171,8 +204,8 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
         String sessionId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterConditionalDeleteMono = this.cartItemRepository.deleteWhenItemQuantityIsOne(cartId, itemId)
-                        .thenMany(this.cartItemRepository.findCartItems(sessionId))
-                        .collectList();
+                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .collectList();
 
         StepVerifier.create(cartItemRowsAfterConditionalDeleteMono)
                 .assertNext(cartItemRowList -> {
@@ -181,7 +214,7 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
                             .containsExactly("Banana", "Carrot");
 
                     boolean hasAppleCartItem = cartItemRowList.stream()
-                                    .anyMatch(cartItemRow -> "Apple".equals(cartItemRow.title()));
+                            .anyMatch(cartItemRow -> "Apple".equals(cartItemRow.title()));
 
                     assertThat(hasAppleCartItem).isFalse();
                 })

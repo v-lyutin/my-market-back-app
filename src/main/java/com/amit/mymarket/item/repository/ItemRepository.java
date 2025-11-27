@@ -13,8 +13,8 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
             select items.id          as id,
                    items.title       as title,
                    items.description as description,
-                   items.img_path    as imagePath,
-                   items.price_minor as priceMinor,
+                   items.img_path    as image_path,
+                   items.price_minor as price_minor,
                    coalesce(carts_items.quantity, 0) as quantity
             from shop.items
             left join shop.carts on carts.session_id = :sessionId and carts.status = 'ACTIVE'
@@ -41,8 +41,8 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
             select items.id          as id,
                    items.title       as title,
                    items.description as description,
-                   items.img_path    as imagePath,
-                   items.price_minor as priceMinor,
+                   items.img_path    as image_path,
+                   items.price_minor as price_minor,
                    coalesce(carts_items.quantity, 0) as quantity
             from shop.items
             left join shop.carts on carts.session_id = :sessionId and carts.status = 'ACTIVE'

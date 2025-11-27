@@ -12,8 +12,8 @@ public interface CartItemRepository extends ReactiveCrudRepository<com.amit.myma
             select items.id as id,
                    items.title as title,
                    items.description as description,
-                   items.img_path as imagePath,
-                   items.price_minor as priceMinor,
+                   items.img_path as image_path,
+                   items.price_minor as price_minor,
                    carts_items.quantity as quantity
             from shop.carts
             join shop.carts_items on carts_items.cart_id = carts.id
