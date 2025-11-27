@@ -1,6 +1,7 @@
 package com.amit.mymarket.order.service;
 
 import com.amit.mymarket.order.domain.entity.Order;
+import com.amit.mymarket.order.domain.entity.OrderItem;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,5 +18,10 @@ public interface OrderQueryService {
      * Returns a single order if it belongs to the session + otherwise throws ResourceNotFoundException.
      */
     Mono<Order> getOrderByIdForSession(long orderId, String sessionId);
+
+    /**
+     * Returns all items for a given order.
+     */
+    Flux<OrderItem> getOrderItems(long orderId);
 
 }

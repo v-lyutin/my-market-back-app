@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mockStatic;
 class CatalogPageRequestTest {
 
     @Test
-    @DisplayName(value = "Should build request with normalized search and resolved sort type and pageable")
+    @DisplayName(value = "Should build request with normalized searchQuery and resolved sort type and pageable")
     void of_shouldBuildRequestWithNormalizedSearchAndResolvedSortTypeAndPageable() {
         String rawSearchQuery = "  Apple  ";
         String normalizedSearchQuery = "apple";

@@ -209,7 +209,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should count items matching searchQuery query")
+    @DisplayName(value = "Should quantity items matching searchQuery query")
     void countItemsBySearchQuery_shouldReturnNumberOfMatchingItems() {
         String searchQuery = "a"; // Apple, Banana, Carrot
 
@@ -221,7 +221,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should count all items when searchQuery query is null")
+    @DisplayName(value = "Should quantity all items when searchQuery query is null")
     void countItemsBySearchQuery_shouldReturnAllItemsWhenSearchQueryIsNull() {
         String searchQuery = null;
 

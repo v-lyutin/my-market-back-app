@@ -13,8 +13,8 @@ import java.util.List;
 public final class DefaultOrderMapper implements OrderMapper {
 
     @Override
-    public OrderDto toOrderDto(Order order) {
-        List<OrderItemDto> items = order.getItems().stream()
+    public OrderDto toOrderDto(Order order, List<OrderItem> items) {
+        List<OrderItemDto> orderItemViews = items.stream()
                 .map(this::toOrderItemDto)
                 .toList();
 
@@ -22,14 +22,14 @@ public final class DefaultOrderMapper implements OrderMapper {
 
         return new OrderDto(
                 order.getId(),
-                items,
+                orderItemViews,
                 totalFormatted
         );
     }
 
     private OrderItemDto toOrderItemDto(OrderItem orderItem) {
         return new OrderItemDto(
-                orderItem.getId().getItemId(),
+                orderItem.getId(),
                 orderItem.getTitleSnapshot(),
                 PriceFormatter.formatPrice(orderItem.getPriceMinorSnapshot()),
                 orderItem.getQuantity()

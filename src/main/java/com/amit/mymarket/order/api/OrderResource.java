@@ -1,17 +1,15 @@
 package com.amit.mymarket.order.api;
 
-import com.amit.mymarket.order.api.dto.OrderDto;
 import com.amit.mymarket.order.usecase.OrderUseCase;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.reactive.result.view.Rendering;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
 
 @Controller
-@RequestMapping(path = "/v1/orders")
+@RequestMapping(path = "/orders")
 public class OrderResource {
 
     private final OrderUseCase orderUseCase;
@@ -22,27 +20,32 @@ public class OrderResource {
     }
 
     @GetMapping
-    public String getOrders(Model model, HttpSession httpSession) {
-        List<OrderDto> orders = this.orderUseCase.getOrdersBySession(httpSession.getId());
-        model.addAttribute("orders", orders);
-        return "order/orders-view";
+    public Mono<Rendering> getOrdersBySession(WebSession webSession) {
+        return this.orderUseCase.getOrdersBySession(webSession.getId())
+                .map(orders ->
+                        Rendering.view("order/orders-view")
+                                .modelAttribute("orders", orders)
+                                .build()
+                );
     }
 
     @GetMapping(path = "/{id}")
-    public String getOrder(@PathVariable(name = "id") long id,
-                           @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
-                           Model model,
-                           HttpSession httpSession) {
-        OrderDto order = this.orderUseCase.getOrderByIdForSession(httpSession.getId(), id);
-        model.addAttribute("order", order);
-        model.addAttribute("newOrder", newOrder);
-        return "order/order-view";
+    public Mono<Rendering> getOrderByIdForSession(@PathVariable(name = "id") long id,
+                                    @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
+                                    WebSession webSession) {
+        return this.orderUseCase.getOrderByIdForSession(webSession.getId(), id)
+                .map(order ->
+                        Rendering.view("order/order-view")
+                                .modelAttribute("order", order)
+                                .modelAttribute("newOrder", newOrder)
+                                .build()
+                );
     }
 
     @PostMapping
-    public String checkout(HttpSession httpSession) {
-        long newOrderId = this.orderUseCase.createOrderFromActiveCartAndClear(httpSession.getId());
-        return "redirect:/v1/orders/" + newOrderId + "?newOrder=true";
+    public Mono<Rendering> createOrderFromActiveCartAndClear(WebSession webSession) {
+        return this.orderUseCase.createOrderFromActiveCartAndClear(webSession.getId())
+                .map(newOrderId -> Rendering.redirectTo("/orders/" + newOrderId + "?newOrder=true").build());
     }
 
 }

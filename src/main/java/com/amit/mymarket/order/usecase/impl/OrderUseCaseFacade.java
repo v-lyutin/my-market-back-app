@@ -32,7 +32,11 @@ public class OrderUseCaseFacade implements OrderUseCase {
     @Transactional(readOnly = true)
     public Mono<List<OrderDto>> getOrdersBySession(String sessionId) {
         return this.orderQueryService.getOrdersBySession(sessionId)
-                .map(this.orderMapper::toOrderDto)
+                .flatMap(order ->
+                        this.orderQueryService.getOrderItems(order.getId())
+                                .collectList()
+                                .map(items -> this.orderMapper.toOrderDto(order, items))
+                )
                 .collectList();
     }
 
@@ -40,7 +44,11 @@ public class OrderUseCaseFacade implements OrderUseCase {
     @Transactional(readOnly = true)
     public Mono<OrderDto> getOrderByIdForSession(String sessionId, long orderId) {
         return this.orderQueryService.getOrderByIdForSession(orderId, sessionId)
-                .map(this.orderMapper::toOrderDto);
+                .flatMap(order ->
+                        this.orderQueryService.getOrderItems(order.getId())
+                                .collectList()
+                                .map(items -> this.orderMapper.toOrderDto(order, items))
+                );
     }
 
     @Override

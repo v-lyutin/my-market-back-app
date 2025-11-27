@@ -27,9 +27,9 @@
                 <h2>
                     <span class="badge text-bg-success">Витрина магазина</span>
                 </h2>
-                <a th:href="@{/v1/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
-                <a th:href="@{/v1/cart/items}" class="btn btn-secondary bi bi-cart4"> Корзина</a>
-                <a th:href="@{/v1/items}" class="btn btn-secondary bi bi-arrow-left-square"> Главная</a>
+                <a th:href="@{/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
+                <a th:href="@{/cart/items}" class="btn btn-secondary bi bi-cart4"> Корзина</a>
+                <a th:href="@{/items}" class="btn btn-secondary bi bi-arrow-left-square"> Главная</a>
             </div>
         </div>
     </div>
@@ -49,12 +49,9 @@
                     <b th:text="${item.title}">Название товара</b>
                 </div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"
-                        th:text="${item.count} + ' шт.'">0 шт.</li>
-                    <li class="list-group-item"
-                        th:text="${item.formatPrice} + ' ₽'">0.00 ₽</li>
+                    <li class="list-group-item" th:text="${item.quantity} + ' шт.'">0 шт.</li>
+                    <li class="list-group-item" th:text="${item.formatPrice} + ' ₽'">0.00 ₽</li>
                 </ul>
-                <!-- Если понадобится сумма по позиции, её лучше добавить в DTO (например, lineTotalFormatted) -->
             </div>
         </div>
     </div>
