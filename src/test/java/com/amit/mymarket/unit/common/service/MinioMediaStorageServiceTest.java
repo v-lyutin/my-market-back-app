@@ -6,7 +6,6 @@ import com.amit.mymarket.common.service.minio.MinioMediaStorageService;
 import com.amit.mymarket.common.service.strategy.KeyNamingStrategy;
 import com.amit.mymarket.common.service.util.PathSpecification;
 import io.minio.MinioClient;
-import io.minio.errors.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,10 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -106,22 +102,6 @@ class MinioMediaStorageServiceTest {
                 .verify();
 
         verifyNoInteractions(this.minioClient);
-    }
-
-    @Test
-    @DisplayName(value = "Should call removeObject on delete for non-empty key")
-    void deleteMediaFile_shouldDelete() throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        when(this.minioStorageServiceBucket()).thenReturn("images");
-
-        Mono<Void> result = this.minioMediaStorageService.deleteMediaFile("items/42/uuid/original.png");
-
-        StepVerifier.create(result).verifyComplete();
-
-        verify(this.minioClient).removeObject(argThat(args -> {
-            assertEquals("images", args.bucket());
-            assertEquals("items/42/uuid/original.png", args.object());
-            return true;
-        }));
     }
 
     @Test

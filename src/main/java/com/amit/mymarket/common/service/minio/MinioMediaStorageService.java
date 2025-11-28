@@ -50,7 +50,7 @@ public class MinioMediaStorageService implements MediaStorageService {
                     .switchIfEmpty(Mono.error(new MediaStorageException("Empty file")))
                     .flatMap(buffer -> {
                         byte[] bytes = toByteArray(buffer);
-                        return validateAndSave(bytes, file.filename(), pathSpecification);
+                        return this.validateAndSave(bytes, file.filename(), pathSpecification);
                     });
         });
     }

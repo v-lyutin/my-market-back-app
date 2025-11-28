@@ -22,6 +22,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.liquibase:liquibase-core")
 	implementation("io.minio:minio:8.6.0")
 	implementation("org.apache.tika:tika-core:3.2.3")

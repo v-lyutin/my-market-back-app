@@ -34,7 +34,7 @@ public class ItemManagementResource {
 
     @PostMapping
     public Mono<Rendering> createItemAndOptionallyUploadImage(@Valid @ModelAttribute(value = "form") CreateItemForm form,
-                                                              @RequestParam(value = "file", required = false) FilePart file) {
+                                                              @RequestPart(value = "file", required = false) FilePart file) {
         return this.itemManagementUseCase.createItemAndOptionallyUploadImage(form, file)
                 .map(item -> Rendering.redirectTo("/management/items/" + item.id()).build());
     }

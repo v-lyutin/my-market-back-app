@@ -21,6 +21,7 @@ public class OrderResource {
 
     @GetMapping
     public Mono<Rendering> getOrdersBySession(WebSession webSession) {
+        webSession.getAttributes().put("init", true);
         return this.orderUseCase.getOrdersBySession(webSession.getId())
                 .map(orders ->
                         Rendering.view("order/orders-view")
@@ -31,8 +32,9 @@ public class OrderResource {
 
     @GetMapping(path = "/{id}")
     public Mono<Rendering> getOrderByIdForSession(@PathVariable(name = "id") long id,
-                                    @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
-                                    WebSession webSession) {
+                                                  @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
+                                                  WebSession webSession) {
+        webSession.getAttributes().put("init", true);
         return this.orderUseCase.getOrderByIdForSession(webSession.getId(), id)
                 .map(order ->
                         Rendering.view("order/order-view")

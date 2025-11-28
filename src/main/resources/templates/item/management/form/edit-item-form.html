@@ -10,7 +10,7 @@
 <div class="container p-3">
     <div class="hstack gap-3 mb-3">
         <h2><span class="badge text-bg-primary">Редактирование товара</span></h2>
-        <a th:href="@{'/v1/management/items/' + ${itemId}}"
+        <a th:href="@{'/management/items/' + ${itemId}}"
            class="btn btn-secondary ms-auto bi bi-arrow-left-square"> Назад</a>
     </div>
 
@@ -19,7 +19,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form th:action="@{'/v1/management/items/' + ${itemId}}"
+            <form th:action="@{'/management/items/' + ${itemId}}"
                   method="post" th:object="${form}">
                 <div class="mb-3">
                     <label class="form-label">Название</label>
@@ -41,7 +41,7 @@
 
                 <div class="hstack gap-3">
                     <button type="submit" class="btn btn-warning bi bi-pencil-square"> Сохранить</button>
-                    <a th:href="@{'/v1/management/items/' + ${itemId}}"
+                    <a th:href="@{'/management/items/' + ${itemId}}"
                        class="btn btn-outline-secondary ms-auto">Отмена</a>
                 </div>
             </form>
@@ -50,7 +50,7 @@
 
             <div class="mt-3">
                 <h6 class="text-muted">Изображение</h6>
-                <form th:action="@{'/v1/management/items/' + ${itemId} + '/image'}"
+                <form th:action="@{'/management/items/' + ${itemId} + '/image'}"
                       method="post" enctype="multipart/form-data">
                     <div class="input-group">
                         <input class="form-control" type="file" name="file" accept="image/*">
@@ -62,7 +62,7 @@
             <hr>
 
             <form class="mt-3"
-                  th:action="@{'/v1/management/items/' + ${itemId} + '/delete'}"
+                  th:action="@{'/management/items/' + ${itemId} + '/delete'}"
                   method="post"
                   onsubmit="return confirm('Удалить этот товар?');">
                 <button type="submit" class="btn btn-outline-danger bi bi-trash"> Удалить товар</button>

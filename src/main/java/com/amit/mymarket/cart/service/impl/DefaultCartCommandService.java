@@ -38,6 +38,7 @@ public class DefaultCartCommandService implements CartCommandService {
                 .flatMap(this::getRequiredActiveCart)
                 .flatMap(cart ->
                         this.cartItemRepository.deleteWhenItemQuantityIsOne(cart.getId(), itemId)
+                                .defaultIfEmpty(0)
                                 .flatMap(deletedRowsCount -> {
                                     if (deletedRowsCount == 0) {
                                         return this.cartItemRepository.decrementWhenItemQuantityGreaterThanOne(cart.getId(), itemId);
