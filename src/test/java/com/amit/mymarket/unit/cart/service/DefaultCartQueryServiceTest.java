@@ -1,22 +1,23 @@
 package com.amit.mymarket.unit.cart.service;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
-import com.amit.mymarket.cart.domain.entity.CartItem;
 import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
+import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.cart.service.impl.DefaultCartQueryService;
-import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.common.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(value = MockitoExtension.class)
@@ -32,77 +33,116 @@ class DefaultCartQueryServiceTest {
     private DefaultCartQueryService cartQueryService;
 
     @Test
-    @DisplayName(value = "Should return an empty list when no active cart is found")
-    void findBySessionIdAndStatus_shouldReturnEmptyListWhenCartNotFound() {
-        String sessionId = "session-1";
-        when(cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE))
-                .thenReturn(Optional.empty());
+    @DisplayName(value = "Should return cart items when session identifier is valid and cart exists")
+    void getCartItems_shouldReturnCartItemsWhenSessionIdentifierIsValidAndCartExists() {
+        String sessionId = "session-123";
 
-        List<CartItem> result = this.cartQueryService.fetchCartItems(sessionId);
+        Cart cart = new Cart();
+        cart.setId(10L);
+        cart.setSessionId(sessionId);
+        cart.setStatus(CartStatus.ACTIVE);
 
-        assertThat(result).isEmpty();
-        verify(this.cartRepository).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        CartItemRow firstCartItemRow = new CartItemRow(1L, "Apple", "Green", "/a.png", 100L, 2);
+        CartItemRow secondCartItemRow = new CartItemRow(2L, "Banana", "Yellow", "/b.png", 50L, 1);
+
+        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(cart));
+
+        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.just(firstCartItemRow, secondCartItemRow));
+
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
+
+        StepVerifier.create(cartItemRows.collectList())
+                .assertNext(cartItemRowList -> {
+                    assertEquals(2, cartItemRowList.size());
+                    assertEquals(1L, cartItemRowList.get(0).id());
+                    assertEquals(2L, cartItemRowList.get(1).id());
+                })
+                .verifyComplete();
+
+        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verify(this.cartItemRepository, times(1)).findCartItems(sessionId);
+    }
+
+    @Test
+    @DisplayName(value = "Should return error when session identifier is empty")
+    void getCartItems_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
+        String sessionId = "   ";
+
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
+
+        StepVerifier.create(cartItemRows)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ServiceException.class, throwable);
+                    assertEquals("Session id is empty", throwable.getMessage());
+                })
+                .verify();
+
+        verifyNoInteractions(this.cartRepository);
         verifyNoInteractions(this.cartItemRepository);
     }
 
     @Test
-    @DisplayName(value = "Should sort items by title (case-insensitive) and then by ID")
-    void findBySessionIdAndStatus_shouldSortItemsByTitleCaseInsensitiveThenById() {
-        String sessionId = "session-2";
+    @DisplayName(value = "Should return empty result when session identifier is valid but cart does not exist")
+    void getCartItems_shouldReturnEmptyResultWhenCartDoesNotExist() {
+        String sessionId = "session-123";
 
-        Item item1 = mock(Item.class);
-        when(item1.getTitle()).thenReturn("alpha");
-        when(item1.getId()).thenReturn(20L);
+        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
 
-        CartItem cartItem1 = mock(CartItem.class);
-        when(cartItem1.getItem()).thenReturn(item1);
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
 
-        Item item2 = mock(Item.class);
-        when(item2.getTitle()).thenReturn("Alpha");
-        when(item2.getId()).thenReturn(10L);
+        StepVerifier.create(cartItemRows).verifyComplete();
 
-        CartItem cartItem2 = mock(CartItem.class);
-        when(cartItem2.getItem()).thenReturn(item2);
-
-        Item item3 = mock(Item.class);
-        when(item3.getTitle()).thenReturn("beta");
-
-        CartItem cartItem3 = mock(CartItem.class);
-        when(cartItem3.getItem()).thenReturn(item3);
-
-        Set<CartItem> items = new HashSet<>(Arrays.asList(cartItem1, cartItem2, cartItem3));
-        Cart cart = mock(Cart.class);
-        when(cart.getItems()).thenReturn(items);
-
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE))
-                .thenReturn(Optional.of(cart));
-
-        List<CartItem> result = this.cartQueryService.fetchCartItems(sessionId);
-
-        assertThat(result).containsExactly(cartItem2, cartItem1, cartItem3);
+        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verifyNoInteractions(this.cartItemRepository);
     }
 
     @Test
-    @DisplayName(value = "Should return 0 when repository returns null for cart total")
-    void calculateCartTotal_shouldReturnZeroWhenRepositoryReturnsNull() {
-        String sessionId = "session-3";
-        when(this.cartItemRepository.calculateCartTotal(sessionId)).thenReturn(null);
+    @DisplayName(value = "Should return total cart price when session identifier is valid")
+    void calculateCartTotalPrice_shouldReturnTotalPriceWhenSessionIdentifierIsValid() {
+        String sessionId = "session-123";
 
-        long cartTotalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);
+        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(Mono.just(500L));
 
-        assertThat(cartTotalMinor).isZero();
-        verify(this.cartItemRepository).calculateCartTotal(sessionId);
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+
+        StepVerifier.create(totalPrice)
+                .expectNext(500L)
+                .verifyComplete();
+
+        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(sessionId);
     }
 
     @Test
-    @DisplayName(value = "Should return the repository value when it is not null")
-    void calculateCartTotalMinor_shouldReturnValueWhenRepositoryReturnsNonNull() {
-        String sessionId = "session-4";
-        when(this.cartItemRepository.calculateCartTotal(sessionId)).thenReturn(12345L);
+    @DisplayName(value = "Should return zero when session identifier is valid but no price is returned")
+    void calculateCartTotalPrice_shouldReturnZeroWhenRepositoryReturnsEmpty() {
+        String sessionId = "session-123";
 
-        long cartTotalMinor = this.cartQueryService.calculateCartTotalMinor(sessionId);
+        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(Mono.empty());
 
-        assertThat(cartTotalMinor).isEqualTo(12345L);
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+
+        StepVerifier.create(totalPrice)
+                .expectNext(0L)
+                .verifyComplete();
+
+        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(sessionId);
+    }
+
+    @Test
+    @DisplayName(value = "Should return error when session identifier is empty")
+    void calculateCartTotalPrice_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
+        String sessionId = "";
+
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+
+        StepVerifier.create(totalPrice)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ServiceException.class, throwable);
+                    assertEquals("Session id is empty", throwable.getMessage());
+                })
+                .verify();
+
+        verifyNoInteractions(this.cartItemRepository);
     }
 
 }

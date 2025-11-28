@@ -11,8 +11,8 @@
 <div class="container p-3">
     <div class="hstack gap-3 mb-3">
         <h2><span class="badge text-bg-success">Витрина магазина</span></h2>
-        <a th:href="@{/v1/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
-        <a th:href="@{/v1/cart/items}" class="btn btn-secondary bi bi-cart4"> Корзина</a>
+        <a th:href="@{/orders}" class="btn btn-secondary ms-auto bi bi-file-earmark-text"> Заказы</a>
+        <a th:href="@{/cart/items}" class="btn btn-secondary bi bi-cart4"> Корзина</a>
     </div>
     <div class="row mb-3">
         <div class="col">
@@ -47,7 +47,7 @@
     <div class="row g-3" th:each="itemsRow : ${items}">
         <div class="col-md-4" th:each="item : ${itemsRow}">
             <div class="card shadow-sm h-100" th:if="${item.id != -1}">
-                <a th:href="@{/v1/items/{id}(id=${item.id})}" class="text-decoration-none text-dark">
+                <a th:href="@{/items/{id}(id=${item.id})}" class="text-decoration-none text-dark">
                     <div class="text-center p-2">
                         <img class="img-fluid rounded border"
                              th:if="${item.imagePath != null and !#strings.isEmpty(item.imagePath)}"
@@ -63,7 +63,7 @@
                     <h5 class="card-title" th:text="${item.title}">Название товара</h5>
                     <h6><span class="badge text-bg-success" th:text="${item.formatPrice} + ' ₽'">0 ₽</span></h6>
                     <p class="card-text small text-muted mb-3" th:text="${item.description}">Описание товара</p>
-                    <form method="post" th:action="@{/v1/items}" class="mt-auto">
+                    <form method="post" th:action="@{/items}" class="mt-auto">
                         <div class="hstack gap-3">
                             <input type="hidden" name="id" th:value="${item.id}">
                             <input type="hidden" name="search" th:value="${search}">
@@ -71,9 +71,9 @@
                             <input type="hidden" name="pageSize" th:value="${paging.pageSize}">
                             <input type="hidden" name="pageNumber" th:value="${paging.pageNumber}">
                             <button type="submit" class="btn btn-outline-secondary" name="action" value="MINUS">-</button>
-                            <span th:text="${item.count}">0</span>
+                            <span th:text="${item.quantity}">0</span>
                             <button type="submit" class="btn btn-outline-secondary" name="action" value="PLUS">+</button>
-                            <button type="submit" class="btn btn-warning ms-auto bi bi-cart4" name="action" value="PLUS" th:if="${item.count == 0}"></button>
+                            <button type="submit" class="btn btn-warning ms-auto bi bi-cart4" name="action" value="PLUS" th:if="${item.quantity == 0}"></button>
                         </div>
                     </form>
                 </div>

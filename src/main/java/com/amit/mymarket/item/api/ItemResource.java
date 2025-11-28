@@ -1,18 +1,19 @@
 package com.amit.mymarket.item.api;
 
-import com.amit.mymarket.item.api.dto.ItemInfoView;
-import com.amit.mymarket.item.api.dto.CatalogPageDto;
+import com.amit.mymarket.item.api.dto.MutateItemForm;
 import com.amit.mymarket.item.api.type.ItemAction;
 import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.usecase.ItemUseCase;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.result.view.Rendering;
+import org.springframework.web.server.WebSession;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 @Controller
-@RequestMapping(path = "/v1/items")
+@RequestMapping(path = "/items")
 public class ItemResource {
 
     private final ItemUseCase itemUseCase;
@@ -23,52 +24,59 @@ public class ItemResource {
     }
 
     @GetMapping
-    public String getItemsPage(@RequestParam(name = "search", required = false) String search,
-                               @RequestParam(name = "sort", defaultValue = "NO") SortType sort,
-                               @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
-                               @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
-                               Model model,
-                               HttpSession httpSession) {
-        String sessionId = httpSession.getId();
-        CatalogPageDto catalogPageDto = this.itemUseCase.getCatalogPage(sessionId, search, sort, pageNumber, pageSize);
-        model.addAttribute("items", catalogPageDto.items());
-        model.addAttribute("search", catalogPageDto.search());
-        model.addAttribute("sort", catalogPageDto.sort());
-        model.addAttribute("paging", catalogPageDto.paging());
-        return "item/items-view";
-    }
-
-    @PostMapping
-    public String mutateItemFromItemsPage(@RequestParam(name = "id") long id,
-                                          @RequestParam(name = "action") ItemAction action,
-                                          @RequestParam(name = "search", required = false) String search,
+    public Mono<Rendering> getCatalogPage(@RequestParam(name = "search", required = false) String search,
                                           @RequestParam(name = "sort", defaultValue = "NO") SortType sort,
                                           @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
                                           @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
-                                          HttpSession httpSession) {
-        String sessionId = httpSession.getId();
-        this.itemUseCase.mutateItem(sessionId, id, action);
-        return "redirect:/v1/items?search=" + (search == null ? "" : search)
-                + "&sort=" + sort
-                + "&pageNumber=" + pageNumber
-                + "&pageSize=" + pageSize;
+                                          WebSession webSession) {
+
+        webSession.getAttributes().put("init", true);
+
+        return this.itemUseCase.getCatalogPage(webSession.getId(), search, sort, pageNumber, pageSize)
+                .map(catalogPageDto ->
+                        Rendering.view("item/items-view")
+                                .modelAttribute("items", catalogPageDto.items())
+                                .modelAttribute("search", catalogPageDto.searchQuery())
+                                .modelAttribute("sort", catalogPageDto.sort())
+                                .modelAttribute("paging", catalogPageDto.paging())
+                                .build()
+                );
+    }
+
+    @PostMapping
+    public Mono<Rendering> mutateItemFromItemsPage(@ModelAttribute MutateItemForm form,
+                                                   WebSession webSession) {
+        webSession.getAttributes().put("init", true);
+
+        Long id = form.id();
+        ItemAction action = form.action();
+        String search = form.search();
+        SortType sort = form.sort() != null ? form.sort() : SortType.NO;
+        int pageNumber = form.pageNumber() != null ? form.pageNumber() : 1;
+        int pageSize = form.pageSize() != null ? form.pageSize() : 5;
+
+        String redirectUrl = UriComponentsBuilder.fromPath("/items")
+                .queryParam("search", search)
+                .queryParam("sort", sort)
+                .queryParam("pageNumber", pageNumber)
+                .queryParam("pageSize", pageSize)
+                .build()
+                .toString();
+        return this.itemUseCase.mutateItem(webSession.getId(), id, action)
+                .thenReturn(Rendering.redirectTo(redirectUrl).build());
     }
 
     @GetMapping(path = "/{id}")
-    public String getItemPage(@PathVariable(name = "id") long id, Model model, HttpSession httpSession) {
-        String sessionId = httpSession.getId();
-        ItemInfoView itemInfoView = this.itemUseCase.getItem(sessionId, id);
-        model.addAttribute("item", itemInfoView);
-        return "item/item-view";
-    }
+    public Mono<Rendering> getItemPage(@PathVariable(name = "id") long id, WebSession webSession) {
 
-    @PostMapping(path = "/{id}")
-    public String mutateItemFromItemPage(@PathVariable(name = "id") long id,
-                                         @RequestParam(name = "action") ItemAction action,
-                                         HttpSession httpSession) {
-        String sessionId = httpSession.getId();
-        this.itemUseCase.mutateItem(sessionId, id, action);
-        return "redirect:/v1/items/" + id;
+        webSession.getAttributes().put("init", true);
+
+        return this.itemUseCase.getItem(webSession.getId(), id)
+                .map(itemInfoView ->
+                        Rendering.view("item/item-view")
+                                .modelAttribute("item", itemInfoView)
+                                .build()
+                );
     }
 
 }

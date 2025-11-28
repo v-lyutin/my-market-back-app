@@ -6,18 +6,17 @@ import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.repository.ItemRepository;
-import com.amit.mymarket.item.repository.projection.ItemWithCountRow;
+import com.amit.mymarket.item.repository.projection.ItemWithQuantity;
 import com.amit.mymarket.item.service.CatalogQueryService;
-import com.amit.mymarket.item.service.util.SearchNormalizer;
+import com.amit.mymarket.item.service.util.CatalogPageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,63 +33,79 @@ public class DefaultCatalogQueryService implements CatalogQueryService {
     }
 
     @Override
-    public Page<Item> fetchCatalogPage(String search, SortType sortType, int pageNumber, int pageSize) {
-        Pageable pageable = PageRequest.of(Math.max(pageNumber - 1, 0), Math.max(pageSize, 1));
-        Page<ItemWithCountRow> itemWithCountRowPage = this.itemRepository.findCatalogWithCounts(
-                null,
-                SearchNormalizer.normalizeSearch(search),
-                sortType.name(),
-                pageable
-        );
-        List<Long> itemIds = itemWithCountRowPage.getContent().stream()
-                .map(ItemWithCountRow::getId)
-                .toList();
-        if (itemIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-        Map<Long, Item> itemsById = this.itemRepository.findAllById(itemIds).stream()
-                .collect(Collectors.toMap(Item::getId, Function.identity()));
-        List<Item> items = itemIds.stream()
-                .map(itemsById::get)
-                .filter(Objects::nonNull)
-                .toList();
+    public Mono<Page<Item>> getCatalogPage(String searchQuery, SortType sortType, int pageNumber, int pageSize) {
+        CatalogPageRequest catalogPageRequest = CatalogPageRequest.of(searchQuery, sortType, pageNumber, pageSize);
 
-        return new PageImpl<>(items, pageable, itemWithCountRowPage.getTotalElements());
+        Mono<List<ItemWithQuantity>> itemsWithQuantity = this.itemRepository.searchItemsWithQuantity(
+                        null,
+                        catalogPageRequest.searchQuery(),
+                        catalogPageRequest.sort(),
+                        catalogPageRequest.limit(),
+                        catalogPageRequest.offset()
+                )
+                .collectList();
+
+        Mono<Long> totalItemsCount = this.itemRepository.countItemsBySearchQuery(catalogPageRequest.searchQuery());
+
+        return Mono.zip(itemsWithQuantity, totalItemsCount)
+                .flatMap(tuple -> {
+                    List<ItemWithQuantity> rows = tuple.getT1();
+                    long totalCount = tuple.getT2();
+
+                    if (rows.isEmpty()) {
+                        return Mono.just(Page.empty(catalogPageRequest.pageable()));
+                    }
+
+                    List<Long> itemIds = rows.stream().map(ItemWithQuantity::id).toList();
+
+                    return this.itemRepository.findAllById(itemIds)
+                            .collectMap(Item::getId)
+                            .map(itemsById -> {
+                                List<Item> items = itemIds.stream()
+                                        .map(itemsById::get)
+                                        .filter(Objects::nonNull)
+                                        .toList();
+
+                                return new PageImpl<>(items, catalogPageRequest.pageable(), totalCount);
+                            });
+                });
     }
 
     @Override
-    public int fetchCartQuantityForItem(String sessionId, long itemId) {
-        ItemWithCountRow itemWithCountRow = this.itemRepository.findItemWithCount(itemId, sessionId);
-        if (itemWithCountRow == null) {
-            return 0;
-        }
-        Integer cartQuantity = itemWithCountRow.getCount();
-        return cartQuantity == null ? 0 : cartQuantity;
+    public Mono<Integer> getCartQuantityForItem(String sessionId, long itemId) {
+        return this.itemRepository.findItemWithQuantity(itemId, sessionId)
+                .map(itemWithQuantity -> Optional.ofNullable(itemWithQuantity.quantity()).orElse(0))
+                .defaultIfEmpty(0);
     }
 
     @Override
-    public Map<Long, Integer> fetchCartQuantitiesForItems(String sessionId, List<Long> itemIds) {
-        if (itemIds == null || itemIds.isEmpty()) {
-            return Collections.emptyMap();
+    public Mono<Map<Long, Integer>> getCartQuantitiesForItems(String sessionId, List<Long> itemIds) {
+        if (CollectionUtils.isEmpty(itemIds)) {
+            return Mono.just(Collections.emptyMap());
         }
+
         Set<Long> requestedItemIds = new HashSet<>(itemIds);
-        List<CartItemRow> cartItemRows = this.cartItemRepository.findCartItems(sessionId);
-        Map<Long, Integer> itemQuantities = cartItemRows.stream()
-                .filter(cartItemRow -> requestedItemIds.contains(cartItemRow.getId()))
-                .collect(Collectors.toMap(
-                        CartItemRow::getId,
-                        row -> Optional.ofNullable(row.getCount()).orElse(0)
-                ));
-        itemIds.stream()
-                .filter(Objects::nonNull)
-                .forEach(id -> itemQuantities.putIfAbsent(id, 0));
-        return itemQuantities;
+
+        return this.cartItemRepository.findCartItems(sessionId)
+                .collectList()
+                .map(cartItemRows -> {
+                    Map<Long, Integer> itemQuantities = cartItemRows.stream()
+                            .filter(cartItems -> requestedItemIds.contains(cartItems.id()))
+                            .collect(Collectors.toMap(
+                                    CartItemRow::id,
+                                    cartItem -> Optional.ofNullable(cartItem.quantity()).orElse(0)
+                            ));
+                    itemIds.stream()
+                            .filter(Objects::nonNull)
+                            .forEach(id -> itemQuantities.putIfAbsent(id, 0));
+                    return itemQuantities;
+                });
     }
 
     @Override
-    public Item fetchItemOrThrow(long itemId) {
+    public Mono<Item> getItemById(long itemId) {
         return this.itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found: id=" + itemId));
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Item not found: id=" + itemId)));
     }
 
 }

@@ -5,20 +5,26 @@ import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.item.entity.Item;
-import com.amit.mymarket.item.service.type.SortType;
 import com.amit.mymarket.item.repository.ItemRepository;
-import com.amit.mymarket.item.repository.projection.ItemWithCountRow;
+import com.amit.mymarket.item.repository.projection.ItemWithQuantity;
 import com.amit.mymarket.item.service.impl.DefaultCatalogQueryService;
+import com.amit.mymarket.item.service.type.SortType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -35,157 +41,233 @@ class DefaultCatalogQueryServiceTest {
     private DefaultCatalogQueryService catalogQueryService;
 
     @Test
-    @DisplayName(value = "Should return empty page when repository projection is empty")
-    void fetchCatalogPage_shouldReturnEmptyPageWhenRepositoryProjectionIsEmpty() {
-        Pageable expectedPageable = PageRequest.of(0, 1);
-        when(this.itemRepository.findCatalogWithCounts(isNull(), anyString(), eq(SortType.ALPHA.name()), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.emptyList(), expectedPageable, 0));
+    @DisplayName(value = "Should return non empty page with items when repository returns results")
+    void getCatalogPage_shouldReturnNonEmptyPageWhenRepositoryReturnsResults() {
+        String searchQuery = "apple";
+        SortType sortType = SortType.ALPHA;
+        int pageNumber = 0;
+        int pageSize = 10;
 
-        Page<Item> resultPage = this.catalogQueryService.fetchCatalogPage("Apple", SortType.ALPHA, 1, 1);
-
-        assertThat(resultPage).isNotNull();
-        assertThat(resultPage.getContent()).isEmpty();
-        assertThat(resultPage.getTotalElements()).isZero();
-
-        verify(itemRepository, never()).findAllById(anyCollection());
-    }
-
-    @Test
-    @DisplayName(value = "Should return zero when item-with-count projection is null")
-    void fetchCartQuantityForItem_shouldReturnZeroWhenItemWithCountProjectionIsNull() {
-        when(this.itemRepository.findItemWithCount(100L, "session-1")).thenReturn(null);
-
-        int itemQuantity = this.catalogQueryService.fetchCartQuantityForItem("session-1", 100L);
-
-        assertThat(itemQuantity).isZero();
-    }
-
-    @Test
-    @DisplayName(value = "Should return zero when item-with-count projection has null quantity")
-    void fetchCartQuantityForItem_shouldReturnZeroWhenItemWithCountProjectionHasNullQuantity() {
-        ItemWithCountRow itemWithCountRow = mock(ItemWithCountRow.class);
-        when(itemWithCountRow.getCount()).thenReturn(null);
-        when(this.itemRepository.findItemWithCount(200L, "session-2")).thenReturn(itemWithCountRow);
-
-        int itemQuantity = this.catalogQueryService.fetchCartQuantityForItem("session-2", 200L);
-
-        assertThat(itemQuantity).isZero();
-    }
-
-    @Test
-    @DisplayName(value = "Should return quantity from item-with-count projection when present")
-    void findItemWithCount_shouldReturnQuantityFromItemWithCountProjectionWhenPresent() {
-        ItemWithCountRow itemWithCountRow = mock(ItemWithCountRow.class);
-        when(itemWithCountRow.getCount()).thenReturn(5);
-        when(this.itemRepository.findItemWithCount(300L, "session-3")).thenReturn(itemWithCountRow);
-
-        int itemQuantity = this.catalogQueryService.fetchCartQuantityForItem("session-3", 300L);
-
-        assertThat(itemQuantity).isEqualTo(5);
-    }
-
-
-    @Test
-    @DisplayName(value = "Should return empty map when requested item ids list is null")
-    void fetchCartQuantitiesForItems_shouldReturnEmptyMapWhenRequestedItemIdsListIsNull() {
-        Map<Long, Integer> result = this.catalogQueryService.fetchCartQuantitiesForItems("session-A", null);
-        assertThat(result).isEmpty();
-        verifyNoInteractions(this.cartItemRepository);
-    }
-
-    @Test
-    @DisplayName(value = "Should return empty map when requested item ids list is empty")
-    void fetchCartQuantitiesForItems_shouldReturnEmptyMapWhenRequestedItemIdsListIsEmpty() {
-        Map<Long, Integer> result = this.catalogQueryService.fetchCartQuantitiesForItems("session-A", Collections.emptyList());
-        assertThat(result).isEmpty();
-        verifyNoInteractions(this.cartItemRepository);
-    }
-
-    @Test
-    @DisplayName(value = "Should return quantities for requested ids and zeros for missing or null counts")
-    void fetchCartQuantitiesForItems_shouldReturnQuantitiesForRequestedIdsAndZerosForMissingOrNullCounts() {
-        List<Long> requestedItemIds = List.of(1L, 2L, 3L);
-
-        CartItemRow row1 = cartItemRow(1L, 2);
-        CartItemRow row3 = cartItemRow(3L, null);
-        CartItemRow row4 = cartItemRow(4L, 7);
-
-        when(cartItemRepository.findCartItems("session-X")).thenReturn(List.of(row1, row3, row4));
-
-        Map<Long, Integer> result = this.catalogQueryService.fetchCartQuantitiesForItems("session-X", requestedItemIds);
-
-        assertThat(result).containsOnly(
-                entry(1L, 2),
-                entry(2L, 0),
-                entry(3L, 0)
+        ItemWithQuantity itemWithQuantity = new ItemWithQuantity(
+                1L,
+                "Apple",
+                "Fresh green apple",
+                "/images/apple.png",
+                100L,
+                2
         );
-    }
 
-    @Test
-    @DisplayName(value = "Should return item when item exists by id")
-    void fetchItemOrThrow_shouldReturnItemWhenItemExistsById() {
-        Item existingItem = item(777L);
-        when(this.itemRepository.findById(777L)).thenReturn(Optional.of(existingItem));
-
-        Item resultItem = this.catalogQueryService.fetchItemOrThrow(777L);
-
-        assertThat(resultItem).isSameAs(existingItem);
-    }
-
-    @Test
-    @DisplayName(value = "Should throw ResourceNotFoundException when item does not exist by id")
-    void fetchItemOrThrow_shouldThrowResourceNotFoundExceptionWhenItemDoesNotExistById() {
-        when(this.itemRepository.findById(888L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> this.catalogQueryService.fetchItemOrThrow(888L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("id=888");
-    }
-
-    private static Item item(Long id) {
         Item item = new Item();
-        item.setId(id);
-        item.setTitle("T-" + id);
-        item.setDescription("D-" + id);
-        item.setImagePath("/img/" + id + ".png");
-        item.setPriceMinor(100L + id);
-        return item;
+        item.setId(1L);
+        item.setTitle("Apple");
+        item.setDescription("Fresh green apple");
+        item.setImagePath("/images/apple.png");
+        item.setPriceMinor(100L);
+
+        when(this.itemRepository.searchItemsWithQuantity(isNull(), anyString(), anyString(), anyLong(), anyLong()))
+                .thenReturn(Flux.just(itemWithQuantity));
+
+        when(this.itemRepository.countItemsBySearchQuery(anyString()))
+                .thenReturn(Mono.just(1L));
+
+        when(this.itemRepository.findAllById(anyIterable()))
+                .thenReturn(Flux.just(item));
+
+        Mono<Page<Item>> catalogPage = this.catalogQueryService.getCatalogPage(searchQuery, sortType, pageNumber, pageSize);
+
+        StepVerifier.create(catalogPage)
+                .assertNext(page -> {
+                    assertEquals(1, page.getTotalElements());
+                    assertEquals(1, page.getContent().size());
+                    Item firstItem = page.getContent().getFirst();
+                    assertEquals(1L, firstItem.getId());
+                    assertEquals("Apple", firstItem.getTitle());
+                })
+                .verifyComplete();
+
+        verify(this.itemRepository, times(1)).searchItemsWithQuantity(isNull(), anyString(), anyString(), anyLong(), anyLong());
+        verify(this.itemRepository, times(1)).countItemsBySearchQuery(anyString());
+        verify(this.itemRepository, times(1)).findAllById(anyIterable());
     }
 
-    private static CartItemRow cartItemRow(Long id, Integer count) {
-        return new CartItemRow() {
+    @Test
+    @DisplayName(value = "Should return empty page when repository returns no items")
+    void getCatalogPage_shouldReturnEmptyPageWhenRepositoryReturnsNoItems() {
+        String searchQuery = "unknown";
+        SortType sortType = SortType.ALPHA;
+        int pageNumber = 0;
+        int pageSize = 10;
 
-            @Override
-            public Long getId() {
-                return id;
-            }
+        when(this.itemRepository.searchItemsWithQuantity(isNull(), anyString(), anyString(), anyLong(), anyLong())).thenReturn(Flux.empty());
 
-            @Override
-            public String getTitle() {
-                return null;
-            }
+        when(this.itemRepository.countItemsBySearchQuery(anyString())).thenReturn(Mono.just(0L));
 
-            @Override
-            public String getDescription() {
-                return null;
-            }
+        Mono<Page<Item>> catalogPage = this.catalogQueryService.getCatalogPage(searchQuery, sortType, pageNumber, pageSize);
 
-            @Override
-            public String getImagePath() {
-                return null;
-            }
+        StepVerifier.create(catalogPage)
+                .assertNext(page -> {
+                    assertEquals(0, page.getTotalElements());
+                    assertTrue(page.getContent().isEmpty());
+                })
+                .verifyComplete();
 
-            @Override
-            public Long getPriceMinor() {
-                return null;
-            }
+        verify(this.itemRepository, times(1)).searchItemsWithQuantity(isNull(), anyString(), anyString(), anyLong(), anyLong());
+        verify(this.itemRepository, times(1)).countItemsBySearchQuery(anyString());
+        verify(this.itemRepository, never()).findAllById(anyIterable());
+    }
 
-            @Override
-            public Integer getCount() {
-                return count;
-            }
+    @Test
+    @DisplayName(value = "Should return quantity when item with quantity exists in cart")
+    void getCartQuantityForItem_shouldReturnQuantityWhenItemWithQuantityExists() {
+        String sessionId = "session-123";
+        long itemId = 1L;
 
-        };
+        ItemWithQuantity itemWithQuantity = new ItemWithQuantity(
+                itemId,
+                "Apple",
+                "Fresh green apple",
+                "/images/apple.png",
+                100L,
+                5
+        );
+
+        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.just(itemWithQuantity));
+
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+
+        StepVerifier.create(quantity)
+                .expectNext(5)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should return zero when quantity is null for item in cart")
+    void getCartQuantityForItem_shouldReturnZeroWhenQuantityIsNull() {
+        String sessionId = "session-123";
+        long itemId = 1L;
+
+        ItemWithQuantity itemWithQuantity = new ItemWithQuantity(
+                itemId,
+                "Apple",
+                "Fresh green apple",
+                "/images/apple.png",
+                100L,
+                null
+        );
+
+        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.just(itemWithQuantity));
+
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+
+        StepVerifier.create(quantity)
+                .expectNext(0)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should return zero when item is not found in cart for session")
+    void getCartQuantityForItem_shouldReturnZeroWhenItemIsNotFound() {
+        String sessionId = "session-123";
+        long itemId = 1L;
+
+        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.empty());
+
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+
+        StepVerifier.create(quantity)
+                .expectNext(0)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should return empty map when item identifier list is empty")
+    void getCartQuantitiesForItems_shouldReturnEmptyMapWhenItemIdentifierListIsEmpty() {
+        String sessionIdentifier = "session-123";
+        List<Long> itemIdentifierList = Collections.emptyList();
+
+        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(sessionIdentifier, itemIdentifierList);
+
+        StepVerifier.create(quantities)
+                .assertNext(resultMap -> assertTrue(resultMap.isEmpty()))
+                .verifyComplete();
+
+        verifyNoInteractions(this.cartItemRepository);
+    }
+
+    @Test
+    @DisplayName(value = "Should return quantities for requested item identifiers and default zero for missing ones")
+    void getCartQuantitiesForItems_shouldReturnQuantitiesAndZeroForMissingItems() {
+        String sessionId = "session-123";
+        List<Long> itemId = List.of(1L, 2L, 3L);
+
+        CartItemRow firstCartItemRow = new CartItemRow(
+                1L,
+                "Apple",
+                "Green apple",
+                "/images/apple.png",
+                100L,
+                5
+        );
+
+        CartItemRow thirdCartItemRow = new CartItemRow(
+                3L,
+                "Carrot",
+                "Orange carrot",
+                "/images/carrot.png",
+                75L,
+                null
+        );
+
+        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.just(firstCartItemRow, thirdCartItemRow));
+
+        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(sessionId, itemId);
+
+        StepVerifier.create(quantities)
+                .assertNext(resultMap -> {
+                    assertEquals(3, resultMap.size());
+                    assertEquals(5, resultMap.get(1L));
+                    assertEquals(0, resultMap.get(2L));
+                    assertEquals(0, resultMap.get(3L));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should return item when item with given identifier exists")
+    void getItemById_shouldReturnItemWhenItemExists() {
+        long itemId = 10L;
+
+        Item item = new Item();
+        item.setId(itemId);
+        item.setTitle("Test item");
+
+        when(this.itemRepository.findById(itemId)).thenReturn(Mono.just(item));
+
+        Mono<Item> itemMono = this.catalogQueryService.getItemById(itemId);
+
+        StepVerifier.create(itemMono)
+                .assertNext(foundItem -> {
+                    assertEquals(itemId, foundItem.getId());
+                    assertEquals("Test item", foundItem.getTitle());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should throw ResourceNotFoundException when item with given identifier does not exist")
+    void getItemById_shouldThrowResourceNotFoundExceptionWhenItemDoesNotExist() {
+        long itemId = 10L;
+
+        when(this.itemRepository.findById(itemId)).thenReturn(Mono.empty());
+
+        Mono<Item> itemMono = this.catalogQueryService.getItemById(itemId);
+
+        StepVerifier.create(itemMono)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ResourceNotFoundException.class, throwable);
+                    assertTrue(throwable.getMessage().contains("Item not found: id=" + itemId));
+                })
+                .verify();
     }
 
 }

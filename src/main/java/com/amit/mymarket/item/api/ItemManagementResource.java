@@ -1,19 +1,18 @@
 package com.amit.mymarket.item.api;
 
 import com.amit.mymarket.item.api.dto.CreateItemForm;
-import com.amit.mymarket.item.api.dto.ItemView;
 import com.amit.mymarket.item.api.dto.UpdateItemForm;
 import com.amit.mymarket.item.usecase.ItemManagementUseCase;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.reactive.result.view.Rendering;
+import reactor.core.publisher.Mono;
 
 @Controller
-@RequestMapping(path = "/v1/management/items")
+@RequestMapping(path = "/management/items")
 public class ItemManagementResource {
 
     private final ItemManagementUseCase itemManagementUseCase;
@@ -24,63 +23,65 @@ public class ItemManagementResource {
     }
 
     @GetMapping(path = "/new")
-    public String showCreateForm(Model model) {
-        model.addAttribute("form", new CreateItemForm("", "", null));
-        return "item/management/form/create-item-form";
+    public Mono<Rendering> showCreateForm() {
+        CreateItemForm form = new CreateItemForm("", "", null);
+        return Mono.just(
+                Rendering.view("item/management/form/create-item-form")
+                        .modelAttribute("form", form)
+                        .build()
+        );
     }
 
     @PostMapping
-    public String createItemAndOptionallyUploadImage(@Valid @ModelAttribute(value = "form") CreateItemForm form,
-                                                     @RequestParam(value = "file", required = false) MultipartFile file,
-                                                     RedirectAttributes redirectAttributes,
-                                                     Model model) {
-        ItemView itemResponse = this.itemManagementUseCase.createItemAndOptionallyUploadImage(form, file);
-        redirectAttributes.addFlashAttribute("success", "Item created successfully");
-        return "redirect:/v1/management/items/" + itemResponse.id();
+    public Mono<Rendering> createItemAndOptionallyUploadImage(@Valid @ModelAttribute(value = "form") CreateItemForm form,
+                                                              @RequestPart(value = "file", required = false) FilePart file) {
+        return this.itemManagementUseCase.createItemAndOptionallyUploadImage(form, file)
+                .map(item -> Rendering.redirectTo("/management/items/" + item.id()).build());
     }
 
     @GetMapping(path = "/{id}")
-    public String fetchItemById(@PathVariable long id, Model model) {
-        ItemView item = this.itemManagementUseCase.fetchItemById(id);
-        model.addAttribute("item", item);
-        return "item/management/view/item-management-view";
+    public Mono<Rendering> getItemById(@PathVariable long id) {
+        return this.itemManagementUseCase.getItemById(id)
+                .map(item ->
+                        Rendering.view("item/management/view/item-management-view")
+                                .modelAttribute("item", item)
+                                .build()
+                );
     }
 
     @GetMapping(path = "/{id}/edit")
-    public String showEditForm(@PathVariable long id, Model model) {
-        ItemView item = this.itemManagementUseCase.fetchItemById(id);
-        model.addAttribute("itemId", id);
-        model.addAttribute("form", new UpdateItemForm(
-                item.title(),
-                item.description(),
-                item.formatPrice()
-        ));
-        return "item/management/form/edit-item-form";
+    public Mono<Rendering> showEditForm(@PathVariable long id) {
+        return this.itemManagementUseCase.getItemById(id)
+                .map(item ->
+                        Rendering.view("item/management/form/edit-item-form")
+                                .modelAttribute("itemId", id)
+                                .modelAttribute("form", new UpdateItemForm(
+                                        item.title(),
+                                        item.description(),
+                                        item.formatPrice()
+                                ))
+                                .build()
+                );
     }
 
     @PostMapping(path = "/{id}")
-    public String updateItemAttributes(@PathVariable long id,
-                                       @Valid @ModelAttribute(value = "form") UpdateItemForm form,
-                                       RedirectAttributes redirectAttributes) {
-        this.itemManagementUseCase.updateItemAttributes(id, form);
-        redirectAttributes.addFlashAttribute("success", "Изменения сохранены");
-        return "redirect:/v1/management/items/" + id;
+    public Mono<Rendering> updateItemAttributes(@PathVariable long id,
+                                                @Valid @ModelAttribute(value = "form") UpdateItemForm form) {
+        return this.itemManagementUseCase.updateItemAttributes(id, form)
+                .thenReturn(Rendering.redirectTo("/management/items/" + id).build());
     }
 
     @PostMapping(path = "/{id}/image")
-    public String replacePrimaryItemImage(@PathVariable long id,
-                                          @RequestParam(value = "file") MultipartFile file,
-                                          RedirectAttributes redirectAttributes) {
-        this.itemManagementUseCase.replacePrimaryItemImage(id, file);
-        redirectAttributes.addFlashAttribute("success", "Изображение заменено");
-        return "redirect:/v1/management/items/" + id;
+    public Mono<Rendering> replaceItemImage(@PathVariable long id,
+                                            @RequestParam(value = "file") FilePart file) {
+        return this.itemManagementUseCase.replaceItemImage(id, file)
+                .thenReturn(Rendering.redirectTo("/management/items/" + id).build());
     }
 
     @PostMapping(path = "/{id}/delete")
-    public String deleteItemCompletely(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        this.itemManagementUseCase.deleteItemCompletely(id);
-        redirectAttributes.addFlashAttribute("success", "Товар удалён");
-        return "redirect:/v1/management/items/new";
+    public Mono<Rendering> deleteItem(@PathVariable long id) {
+        return this.itemManagementUseCase.deleteItem(id)
+                .thenReturn(Rendering.redirectTo("/management/items/new").build());
     }
 
 }

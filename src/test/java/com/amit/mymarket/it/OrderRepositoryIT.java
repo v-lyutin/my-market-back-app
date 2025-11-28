@@ -1,14 +1,18 @@
 package com.amit.mymarket.it;
 
+import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.repository.OrderRepository;
-import com.amit.mymarket.order.repository.projection.OrderHeaderRow;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.r2dbc.core.DatabaseClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,65 +21,114 @@ class OrderRepositoryIT extends AbstractRepositoryIT {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Test
-    @DisplayName(value = "Should return all orders for the given session id sorted by creation date descending")
-    @Sql(statements = {
-            "insert into shop.orders (id, session_id, status, total_minor, created_at) values (1,'session-1','CREATED',500, now() - interval '3 days')",
-            "insert into shop.orders (id, session_id, status, total_minor, created_at) values (2,'session-1','PAID',700, now() - interval '2 days')",
-            "insert into shop.orders (id, session_id, status, total_minor, created_at) values (3,'session-1','CANCELLED',100, now() - interval '1 day')",
-            "insert into shop.orders (id, session_id, status, total_minor, created_at) values (4,'session-2','CREATED',200, now())"
-    })
-    void findOrdersBySession_shouldReturnAllOrdersForGivenSessionIdSortedByCreationDateDescending() {
-        List<OrderHeaderRow> orders = this.orderRepository.findOrdersBySession("session-1");
+    @Autowired
+    private DatabaseClient databaseClient;
 
-        assertThat(orders).hasSize(3);
-        assertThat(orders)
-                .extracting(OrderHeaderRow::getId)
-                .containsExactly(3L, 2L, 1L);
-        assertThat(orders)
-                .extracting(OrderHeaderRow::getTotalMinor)
-                .containsExactly(100L, 700L, 500L);
+    @BeforeEach
+    void setUpTestData() {
+        Mono<Void> setupFlow = this.databaseClient.sql("delete from shop.orders_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.orders")
+                        .fetch()
+                        .rowsUpdated())
+                .then(this.databaseClient.sql("""
+                                insert into shop.orders (id, session_id, total_minor) values
+                                (1, 'session-123', 500),
+                                (2, 'session-123', 750),
+                                (3, 'another-session', 1000)
+                                """)
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+        setupFlow.block();
+    }
+
+    @AfterEach
+    void cleanUpTestData() {
+        Mono<Void> cleanupFlow = this.databaseClient.sql("delete from shop.orders_items")
+                .fetch()
+                .rowsUpdated()
+                .then(this.databaseClient.sql("delete from shop.orders")
+                        .fetch()
+                        .rowsUpdated())
+                .then();
+
+        cleanupFlow.block();
     }
 
     @Test
-    @DisplayName(value = "Should return an empty list when there are no orders for the given session id")
-    @Sql(statements = {
-            "insert into shop.orders (id, session_id, total_minor) values (10,'another-session',400)"
-    })
-    void findOrdersBySession_shouldReturnEmptyListWhenThereAreNoOrdersForGivenSessionId() {
-        List<OrderHeaderRow> orders = this.orderRepository.findOrdersBySession("missing-session");
-        assertThat(orders).isEmpty();
+    @DisplayName(value = "Should return all orders for given session identifier")
+    void findAllBySessionId_shouldReturnAllOrdersForGivenSessionIdentifier() {
+        String sessionId = "session-123";
+
+        Flux<Order> orders = this.orderRepository.findAllBySessionId(sessionId);
+
+        StepVerifier.create(orders.collectList())
+                .assertNext(orderList -> {
+                    assertThat(orderList).hasSize(2);
+
+                    List<Long> orderIds = orderList.stream()
+                            .map(Order::getId)
+                            .toList();
+
+                    List<Long> totalMinors = orderList.stream()
+                            .map(Order::getTotalMinor)
+                            .toList();
+
+                    assertThat(orderIds).containsExactlyInAnyOrder(1L, 2L);
+                    assertThat(totalMinors).containsExactlyInAnyOrder(500L, 750L);
+                })
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should find order header by order id and session id when the order exists")
-    @Sql(statements = {
-            "insert into shop.orders (id, session_id, status, total_minor) values (20,'session-3','PAID',999)"
-    })
-    void findOrderHeader_shouldFindOrderHeaderByOrderIdAndSessionIdWhenOrderExists() {
-        Optional<OrderHeaderRow> optionalOrder = this.orderRepository.findOrderHeader(20L, "session-3");
+    @DisplayName(value = "Should return empty result when there are no orders for given session identifier")
+    void findAllBySessionId_shouldReturnEmptyResultWhenNoOrdersExistForGivenSessionIdentifier() {
+        String sessionId = "unknown-session";
 
-        assertThat(optionalOrder).isPresent();
-        OrderHeaderRow order = optionalOrder.orElseThrow();
-        assertThat(order.getId()).isEqualTo(20L);
-        assertThat(order.getTotalMinor()).isEqualTo(999L);
+        Flux<Order> orders = this.orderRepository.findAllBySessionId(sessionId);
+
+        StepVerifier.create(orders).verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty optional when order with given id does not belong to provided session")
-    @Sql(statements = {
-            "insert into shop.orders (id, session_id, total_minor) values (21,'session-4',1000)"
-    })
-    void findOrderHeader_shouldReturnEmptyOptionalWhenOrderWithGivenIdDoesNotBelongToProvidedSession() {
-        Optional<OrderHeaderRow> order = this.orderRepository.findOrderHeader(21L, "session-999");
-        assertThat(order).isEmpty();
+    @DisplayName(value = "Should return order when order with given identifier and session identifier exists")
+    void findByIdAndSessionId_shouldReturnOrderWhenOrderWithGivenIdentifierAndSessionIdentifierExists() {
+        long orderId = 2L;
+        String sessionId = "session-123";
+
+        Mono<Order> result = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+
+        StepVerifier.create(result)
+                .assertNext(order -> {
+                    assertThat(order.getId()).isEqualTo(2L);
+                    assertThat(order.getTotalMinor()).isEqualTo(750L);
+                    assertThat(order.getSessionId()).isEqualTo("session-123");
+                })
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty optional when order with given id does not exist")
-    void findOrderHeader_shouldReturnEmptyOptionalWhenOrderWithGivenIdDoesNotExist() {
-        Optional<OrderHeaderRow> order = this.orderRepository.findOrderHeader(9999L, "session-1");
-        assertThat(order).isEmpty();
+    @DisplayName(value = "Should return empty result when order identifier does not exist for given session identifier")
+    void findByIdAndSessionId_shouldReturnEmptyResultWhenOrderIdentifierDoesNotExistForGivenSessionIdentifier() {
+        long orderId = 999L;
+        String sessionId = "session-123";
+
+        Mono<Order> order = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+
+        StepVerifier.create(order).verifyComplete();
+    }
+
+    @Test
+    @DisplayName(value = "Should return empty result when order belongs to another session identifier")
+    void findByIdAndSessionId_shouldReturnEmptyResultWhenOrderBelongsToAnotherSessionIdentifier() {
+        long orderId = 3L;
+        String sessionId = "session-123";
+
+        Mono<Order> order = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+
+        StepVerifier.create(order).verifyComplete();
     }
 
 }

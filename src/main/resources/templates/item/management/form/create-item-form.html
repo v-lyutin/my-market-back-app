@@ -16,7 +16,7 @@
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
     <div class="card shadow-sm">
         <div class="card-body">
-            <form th:action="@{/v1/management/items}" method="post" enctype="multipart/form-data"
+            <form th:action="@{/management/items}" method="post" enctype="multipart/form-data"
                   th:object="${form}">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Название</label>

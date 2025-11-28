@@ -3,18 +3,19 @@ package com.amit.mymarket.item.usecase;
 import com.amit.mymarket.item.api.dto.CreateItemForm;
 import com.amit.mymarket.item.api.dto.ItemView;
 import com.amit.mymarket.item.api.dto.UpdateItemForm;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.codec.multipart.FilePart;
+import reactor.core.publisher.Mono;
 
 public interface ItemManagementUseCase {
 
-    ItemView createItemAndOptionallyUploadImage(CreateItemForm createItemForm, MultipartFile file);
+    Mono<ItemView> createItemAndOptionallyUploadImage(CreateItemForm createItemForm, FilePart file);
 
-    void replacePrimaryItemImage(long itemId, MultipartFile file);
+    Mono<Void> replaceItemImage(long itemId, FilePart file);
 
-    void updateItemAttributes(long itemId, UpdateItemForm updateItemForm);
+    Mono<Void> updateItemAttributes(long itemId, UpdateItemForm updateItemForm);
 
-    void deleteItemCompletely(long itemId);
+    Mono<Void> deleteItem(long itemId);
 
-    ItemView fetchItemById(long itemId);
+    Mono<ItemView> getItemById(long itemId);
 
 }

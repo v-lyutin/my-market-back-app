@@ -1,22 +1,23 @@
 package com.amit.mymarket.order.service.impl;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
-import com.amit.mymarket.cart.domain.entity.CartItem;
 import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
-import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.cart.repository.projection.CartItemRow;
+import com.amit.mymarket.common.exception.ResourceNotFoundException;
+import com.amit.mymarket.common.util.SessionUtils;
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.domain.entity.OrderItem;
-import com.amit.mymarket.order.domain.type.OrderStatus;
+import com.amit.mymarket.order.repository.OrderItemRepository;
 import com.amit.mymarket.order.repository.OrderRepository;
 import com.amit.mymarket.order.service.CheckoutService;
-import com.amit.mymarket.order.service.exception.EmptyCartException;
+import com.amit.mymarket.order.service.util.OrderUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -28,68 +29,65 @@ public class DefaultCheckoutService implements CheckoutService {
 
     private final OrderRepository orderRepository;
 
+    private final OrderItemRepository orderItemRepository;
+
     @Autowired
-    public DefaultCheckoutService(CartRepository cartRepository, CartItemRepository cartItemRepository, OrderRepository orderRepository) {
+    public DefaultCheckoutService(CartRepository cartRepository, CartItemRepository cartItemRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     @Override
-    public long createOrderFromActiveCartAndClear(String sessionId) {
-        Cart cart = requireActiveNonEmptyCart(sessionId);
-
-        Order order = this.newOrderHeader(sessionId);
-        List<CartItem> cartItems = new ArrayList<>(cart.getItems());
-
-        List<OrderItem> orderItems = this.toOrderItems(order, cartItems);
-        long totalMinor = orderItems.stream()
-                .mapToLong(orderItem -> orderItem.getPriceMinorSnapshot() * (long) orderItem.getQuantity())
-                .sum();
-
-        orderItems.forEach(order::addOrderItem);
-        order.setTotalMinor(totalMinor);
-
-        Order persistedOrder = this.orderRepository.save(order);
-
-        this.clearCart(cart, cartItems);
-        return persistedOrder.getId();
+    public Mono<Long> createOrderFromActiveCartAndClear(String sessionId) {
+        return SessionUtils.ensureSessionId(sessionId)
+                .flatMap(this::getRequiredActiveCart)
+                .zipWhen(cart -> this.getCartItems(cart.getSessionId()))
+                .flatMap(tuple -> {
+                    Cart cart = tuple.getT1();
+                    List<CartItemRow> cartRows = tuple.getT2();
+                    return this.createOrderAndClearCart(cart, cartRows);
+                });
     }
 
-    private Cart requireActiveNonEmptyCart(String sessionId) {
-        Cart cart = cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE).orElse(null);
-        if (cart == null || cart.getItems().isEmpty()) {
-            throw new EmptyCartException("Cannot create order: the active cart is empty");
-        }
-        return cart;
+    private Mono<Cart> getRequiredActiveCart(String sessionId) {
+        return this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Active cart not found for sessionId=" + sessionId)));
     }
 
-    private Order newOrderHeader(String sessionId) {
-        Order order = new Order();
-        order.setSessionId(sessionId);
-        order.setStatus(OrderStatus.CREATED);
-        return order;
+    private Mono<List<CartItemRow>> getCartItems(String sessionId) {
+        return this.cartItemRepository.findCartItems(sessionId)
+                .collectList()
+                .flatMap(cartItemRows -> {
+                    if (CollectionUtils.isEmpty(cartItemRows)) {
+                        return Mono.error(new ResourceNotFoundException("Active cart is empty for sessionId=" + sessionId));
+                    }
+                    return Mono.just(cartItemRows);
+                });
     }
 
-    private List<OrderItem> toOrderItems(Order order, Collection<CartItem> cartItems) {
-        return cartItems.stream()
-                .map(cartItem -> {
-                    Item item = cartItem.getItem();
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setOrder(order);
-                    orderItem.setItem(item);
-                    orderItem.setTitleSnapshot(item.getTitle());
-                    orderItem.setPriceMinorSnapshot(item.getPriceMinor());
-                    orderItem.setQuantity(cartItem.getQuantity());
-                    return orderItem;
-                })
-                .toList();
+    private Mono<Long> createOrderAndClearCart(Cart cart, List<CartItemRow> cartRows) {
+        long totalMinor = OrderUtils.calculateTotalMinor(cartRows);
+
+        Order order = new Order(cart.getSessionId(), totalMinor);
+
+        return this.orderRepository.save(order)
+                .flatMap(savedOrder -> {
+                    List<OrderItem> orderItems = OrderUtils.buildOrderItems(savedOrder, cartRows);
+
+                    return this.orderItemRepository.saveAll(orderItems)
+                            .then(this.clearCart(cart))
+                            .thenReturn(savedOrder.getId());
+                });
     }
 
-    private void clearCart(Cart cart, Collection<CartItem> cartItems) {
-        cartItems.forEach(cartItem -> this.cartItemRepository.deleteCartItem(cart.getId(), cartItem.getItem().getId()));
-        cart.setStatus(CartStatus.ORDERED);
-        this.cartRepository.save(cart);
+    private Mono<Void> clearCart(Cart cart) {
+        return this.cartItemRepository.deleteByCartId(cart.getId())
+                .then(Mono.defer(() -> {
+                    cart.setStatus(CartStatus.ORDERED);
+                    return this.cartRepository.save(cart).then();
+                }));
     }
 
 }

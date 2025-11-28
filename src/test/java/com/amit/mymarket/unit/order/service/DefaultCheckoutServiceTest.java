@@ -1,30 +1,30 @@
 package com.amit.mymarket.unit.order.service;
 
 import com.amit.mymarket.cart.domain.entity.Cart;
-import com.amit.mymarket.cart.domain.entity.CartItem;
 import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
-import com.amit.mymarket.item.entity.Item;
+import com.amit.mymarket.cart.repository.projection.CartItemRow;
+import com.amit.mymarket.common.exception.ResourceNotFoundException;
+import com.amit.mymarket.common.exception.ServiceException;
 import com.amit.mymarket.order.domain.entity.Order;
-import com.amit.mymarket.order.domain.type.OrderStatus;
+import com.amit.mymarket.order.repository.OrderItemRepository;
 import com.amit.mymarket.order.repository.OrderRepository;
-import com.amit.mymarket.order.service.exception.EmptyCartException;
 import com.amit.mymarket.order.service.impl.DefaultCheckoutService;
+import com.amit.mymarket.order.service.util.OrderUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Optional;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(value = MockitoExtension.class)
@@ -39,85 +39,121 @@ class DefaultCheckoutServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private OrderItemRepository orderItemRepository;
+
     @InjectMocks
     private DefaultCheckoutService checkoutService;
 
     @Test
-    @DisplayName(value = "Should throw EmptyCartException when no active cart exists")
-    void createOrderFromActiveCartAndClear_shouldThrowWhenNoActiveCart() {
-        String sessionId = "session-A";
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE))
-                .thenReturn(Optional.empty());
+    @DisplayName(value = "Should create order from active cart and clear cart when session identifier and cart and items are valid")
+    void createOrderFromActiveCartAndClear_shouldCreateOrderAndClearCartWhenEverythingIsValid() {
+        String sessionId = "session-123";
+        long expectedOrderId = 42L;
 
-        assertThatThrownBy(() -> this.checkoutService.createOrderFromActiveCartAndClear(sessionId))
-                .isInstanceOf(EmptyCartException.class)
-                .hasMessageContaining("active cart is empty");
+        Cart activeCart = new Cart();
+        activeCart.setId(5L);
+        activeCart.setSessionId(sessionId);
+        activeCart.setStatus(CartStatus.ACTIVE);
 
-        verifyNoInteractions(this.orderRepository, this.cartItemRepository);
+        CartItemRow firstCartItemRow = new CartItemRow(1L, "Apple", "Green", "/a.png", 100L, 2);
+        CartItemRow secondCartItemRow = new CartItemRow(2L, "Banana", "Yellow", "/b.png", 50L, 1);
+
+        List<CartItemRow> cartItemList = List.of(firstCartItemRow, secondCartItemRow);
+        long expectedTotalMinor = OrderUtils.calculateTotalMinor(cartItemList);
+
+        Order savedOrder = new Order(sessionId, expectedTotalMinor);
+        savedOrder.setId(expectedOrderId);
+
+        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
+        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.fromIterable(cartItemList));
+        when(this.orderRepository.save(any(Order.class))).thenReturn(Mono.just(savedOrder));
+        when(this.orderItemRepository.saveAll(anyList())).thenReturn(Flux.empty());
+        when(this.cartItemRepository.deleteByCartId(activeCart.getId())).thenReturn(Mono.empty());
+        when(this.cartRepository.save(any(Cart.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        Mono<Long> result = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
+
+        StepVerifier.create(result)
+                .expectNext(expectedOrderId)
+                .verifyComplete();
+
+        verify(this.cartRepository).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verify(this.cartItemRepository).findCartItems(sessionId);
+        verify(this.orderRepository).save(any(Order.class));
+        verify(this.orderItemRepository).saveAll(anyList());
+        verify(this.cartItemRepository).deleteByCartId(activeCart.getId());
+        verify(this.cartRepository).save(any(Cart.class));
     }
 
     @Test
-    @DisplayName(value = "Should throw EmptyCartException when active cart has no items")
-    void createOrderFromActiveCartAndClear_shouldThrowWhenActiveCartEmpty() {
-        String sessionId = "session-B";
-        Cart emptyCart = mock(Cart.class);
-        when(emptyCart.getItems()).thenReturn(Collections.emptySet());
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE))
-                .thenReturn(Optional.of(emptyCart));
+    @DisplayName(value = "Should return error when session identifier is empty")
+    void createOrderFromActiveCartAndClear_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
+        String sessionId = "   ";
 
-        assertThatThrownBy(() -> this.checkoutService.createOrderFromActiveCartAndClear(sessionId))
-                .isInstanceOf(EmptyCartException.class);
+        Mono<Long> orderId = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
 
-        verifyNoInteractions(this.orderRepository, this.cartItemRepository);
+        StepVerifier.create(orderId)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ServiceException.class, throwable);
+                    assertEquals("Session id is empty", throwable.getMessage());
+                })
+                .verify();
+
+        verifyNoInteractions(this.cartRepository);
+        verifyNoInteractions(this.cartItemRepository);
+        verifyNoInteractions(this.orderRepository);
+        verifyNoInteractions(this.orderItemRepository);
     }
 
     @Test
-    @DisplayName(value = "Should create order from active cart, save it, clear cart items and return new order id")
-    void createOrderFromActiveCartAndClear_shouldCreateOrderSaveAndClearCart() {
-        String sessionId = "session-C";
+    @DisplayName(value = "Should return error when active cart does not exist for session identifier")
+    void createOrderFromActiveCartAndClear_shouldReturnErrorWhenActiveCartDoesNotExist() {
+        String sessionId = "session-123";
 
-        Item item1 = mock(Item.class);
-        when(item1.getId()).thenReturn(101L);
-        when(item1.getPriceMinor()).thenReturn(1500L);
+        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
 
-        CartItem cartItem1 = mock(CartItem.class);
-        when(cartItem1.getItem()).thenReturn(item1);
-        when(cartItem1.getQuantity()).thenReturn(2);
+        Mono<Long> orderId = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
 
-        Item item2 = mock(Item.class);
-        when(item2.getId()).thenReturn(202L);
-        when(item2.getPriceMinor()).thenReturn(999L);
+        StepVerifier.create(orderId)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ResourceNotFoundException.class, throwable);
+                    assertTrue(throwable.getMessage().contains("Active cart not found for sessionId=" + sessionId));
+                })
+                .verify();
 
-        CartItem cartItem2 = mock(CartItem.class);
-        when(cartItem2.getItem()).thenReturn(item2);
-        when(cartItem2.getQuantity()).thenReturn(3);
-
-        Cart cart = mock(Cart.class);
-        when(cart.getId()).thenReturn(77L);
-        when(cart.getItems()).thenReturn(new LinkedHashSet<>(Arrays.asList(cartItem1, cartItem2)));
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE))
-                .thenReturn(Optional.of(cart));
-
-        Order persistedOrder = mock(Order.class);
-        when(persistedOrder.getId()).thenReturn(555L);
-        when(this.orderRepository.save(any(Order.class))).thenReturn(persistedOrder);
-
-        long resultId = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
-
-        assertThat(resultId).isEqualTo(555L);
-
-        verify(this.orderRepository).save(argThat(order -> {
-            assertThat(order.getSessionId()).isEqualTo(sessionId);
-            assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
-            assertThat(order.getTotalMinor()).isEqualTo(3000L + 2997L);
-            return true;
-        }));
-
-        verify(this.cartItemRepository).deleteCartItem(77L, 101L);
-        verify(this.cartItemRepository).deleteCartItem(77L, 202L);
-
-        verify(cart).setStatus(CartStatus.ORDERED);
-        verify(this.cartRepository).save(cart);
+        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verifyNoInteractions(this.cartItemRepository);
+        verifyNoInteractions(this.orderRepository);
+        verifyNoInteractions(this.orderItemRepository);
     }
 
+    @Test
+    @DisplayName(value = "Should return error when active cart is empty for session identifier")
+    void createOrderFromActiveCartAndClear_shouldReturnErrorWhenActiveCartIsEmpty() {
+        String sessionId = "session-123";
+
+        Cart activeCart = new Cart();
+        activeCart.setId(5L);
+        activeCart.setSessionId(sessionId);
+        activeCart.setStatus(CartStatus.ACTIVE);
+
+        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
+
+        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.empty());
+
+        Mono<Long> orderId = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
+
+        StepVerifier.create(orderId)
+                .expectErrorSatisfies(throwable -> {
+                    assertInstanceOf(ResourceNotFoundException.class, throwable);
+                    assertTrue(throwable.getMessage().contains("Active cart is empty for sessionId=" + sessionId));
+                })
+                .verify();
+
+        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verify(this.cartItemRepository, times(1)).findCartItems(sessionId);
+        verifyNoInteractions(this.orderRepository);
+        verifyNoInteractions(this.orderItemRepository);
+    }
 }
