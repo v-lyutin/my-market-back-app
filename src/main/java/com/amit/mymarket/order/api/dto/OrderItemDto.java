@@ -4,5 +4,5 @@ public record OrderItemDto(
         long id,
         String title,
         String formatPrice,
-        int count) {
+        int quantity) {
 }

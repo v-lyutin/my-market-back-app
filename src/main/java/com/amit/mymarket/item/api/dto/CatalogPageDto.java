@@ -7,6 +7,6 @@ import java.util.List;
 public record CatalogPageDto(
         List<List<ItemInfoView>> items,
         Paging paging,
-        String search,
+        String searchQuery,
         SortType sort) {
 }

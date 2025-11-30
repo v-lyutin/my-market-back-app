@@ -1,24 +1,24 @@
 spring:
   application:
     name: my-market
-  datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/my-market}
+  r2dbc:
+    url: ${R2DBC_URL:r2dbc:postgresql://localhost:5432/my-market}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: none
-    open-in-view: false
   liquibase:
     enabled: true
     change-log: classpath:db.changelog/db.changelog-master.yaml
     liquibase-schema: public
     default-schema: public
+    url: ${JDBC_URL:jdbc:postgresql://localhost:5432/my-market}
+    user: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
 server:
-  port: 8080
-  servlet:
-    context-path: /api
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
 storage:
   minio:
     base-url: ${MINIO_URL:http://localhost:9000}

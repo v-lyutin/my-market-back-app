@@ -1,6 +1,6 @@
-package com.amit.mymarket.cart.repository.projection;
+package com.amit.mymarket.item.repository.projection;
 
-public record CartItemRow(
+public record ItemWithQuantity(
     Long id,
     String title,
     String description,

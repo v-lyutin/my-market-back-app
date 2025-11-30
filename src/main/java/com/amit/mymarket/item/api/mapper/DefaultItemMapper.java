@@ -1,5 +1,6 @@
 package com.amit.mymarket.item.api.mapper;
 
+import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.common.service.MediaUrlResolver;
 import com.amit.mymarket.common.util.PriceFormatter;
 import com.amit.mymarket.item.api.dto.CreateItemForm;
@@ -58,6 +59,18 @@ public final class DefaultItemMapper implements ItemMapper {
                 this.mediaUrlResolver.buildPublicUrl(item.getImagePath()),
                 PriceFormatter.formatPrice(item.getPriceMinor()),
                 quantity
+        );
+    }
+
+    @Override
+    public ItemInfoView toItemInfoView(CartItemRow cartItemRow) {
+        return new ItemInfoView(
+                cartItemRow.id(),
+                cartItemRow.title(),
+                cartItemRow.description(),
+                this.mediaUrlResolver.buildPublicUrl(cartItemRow.imagePath()),
+                PriceFormatter.formatPrice(cartItemRow.priceMinor()),
+                cartItemRow.quantity()
         );
     }
 

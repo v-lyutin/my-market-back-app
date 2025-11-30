@@ -8,8 +8,10 @@ import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.service.ItemManagementService;
 import com.amit.mymarket.item.usecase.ItemManagementUseCase;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ItemManagementUseCaseFacade implements ItemManagementUseCase {
@@ -25,30 +27,36 @@ public class ItemManagementUseCaseFacade implements ItemManagementUseCase {
     }
 
     @Override
-    public ItemView createItemAndOptionallyUploadImage(CreateItemForm createItemForm, MultipartFile file) {
+    @Transactional
+    public Mono<ItemView> createItemAndOptionallyUploadImage(CreateItemForm createItemForm, FilePart file) {
         Item item = this.itemMapper.toItem(createItemForm);
-        return this.itemMapper.toItemView(this.itemManagementService.createItemAndOptionallyUploadImage(item, file));
+        return this.itemManagementService.createItemAndOptionallyUploadImage(item, file)
+                .map(this.itemMapper::toItemView);
     }
 
     @Override
-    public void replacePrimaryItemImage(long itemId, MultipartFile file) {
-        this.itemManagementService.replacePrimaryItemImage(itemId, file);
+    @Transactional
+    public Mono<Void> replaceItemImage(long itemId, FilePart file) {
+        return this.itemManagementService.replaceItemImage(itemId, file);
     }
 
     @Override
-    public void updateItemAttributes(long itemId, UpdateItemForm updateItemForm) {
+    @Transactional
+    public Mono<Void> updateItemAttributes(long itemId, UpdateItemForm updateItemForm) {
         Item item = this.itemMapper.toItem(updateItemForm);
-        this.itemMapper.toItemView(this.itemManagementService.updateItemAttributes(itemId, item));
+        return this.itemManagementService.updateItemAttributes(itemId, item).then();
     }
 
     @Override
-    public void deleteItemCompletely(long itemId) {
-        this.itemManagementService.deleteItemCompletely(itemId);
+    @Transactional
+    public Mono<Void> deleteItem(long itemId) {
+        return this.itemManagementService.deleteItem(itemId);
     }
 
     @Override
-    public ItemView fetchItemById(long itemId) {
-        return this.itemMapper.toItemView(this.itemManagementService.fetchItemById(itemId));
+    @Transactional(readOnly = true)
+    public Mono<ItemView> getItemById(long itemId) {
+        return this.itemManagementService.getItemById(itemId).map(this.itemMapper::toItemView);
     }
 
 }
