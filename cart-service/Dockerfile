@@ -2,9 +2,9 @@ FROM amazoncorretto:21-alpine-jdk AS build
 
 WORKDIR /app
 
-COPY gradlew ./gradlew
-COPY gradle ./gradle
-COPY build.gradle.kts settings.gradle.kts ./
+COPY ../gradlew ./gradlew
+COPY ../gradle ./gradle
+COPY ../build.gradle.kts settings.gradle.kts ./
 
 RUN chmod +x ./gradlew
 
