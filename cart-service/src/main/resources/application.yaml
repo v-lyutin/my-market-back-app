@@ -5,6 +5,10 @@ spring:
     url: ${R2DBC_URL:r2dbc:postgresql://localhost:5432/my-market}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
   liquibase:
     enabled: true
     change-log: classpath:db.changelog/db.changelog-master.yaml
