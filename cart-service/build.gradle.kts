@@ -5,14 +5,14 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":media-storage"))
+
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.liquibase:liquibase-core")
-    implementation("io.minio:minio:8.6.0")
-    implementation("org.apache.tika:tika-core:3.2.3")
     runtimeOnly("org.postgresql:r2dbc-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
@@ -23,5 +23,4 @@ dependencies {
     testImplementation("org.testcontainers:r2dbc")
     testImplementation("org.testcontainers:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
 }

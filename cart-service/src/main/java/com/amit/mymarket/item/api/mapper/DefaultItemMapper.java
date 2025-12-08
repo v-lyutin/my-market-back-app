@@ -1,13 +1,13 @@
 package com.amit.mymarket.item.api.mapper;
 
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
-import com.amit.mymarket.common.service.MediaUrlResolver;
 import com.amit.mymarket.common.util.PriceFormatter;
 import com.amit.mymarket.item.api.dto.CreateItemForm;
 import com.amit.mymarket.item.api.dto.ItemInfoView;
 import com.amit.mymarket.item.api.dto.ItemView;
 import com.amit.mymarket.item.api.dto.UpdateItemForm;
 import com.amit.mymarket.item.entity.Item;
+import com.amit.storage.service.MediaUrlResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

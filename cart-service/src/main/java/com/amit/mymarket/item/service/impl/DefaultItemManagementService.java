@@ -2,11 +2,11 @@ package com.amit.mymarket.item.service.impl;
 
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
-import com.amit.mymarket.common.service.MediaStorageService;
-import com.amit.mymarket.common.service.util.PathSpecification;
 import com.amit.mymarket.item.entity.Item;
 import com.amit.mymarket.item.repository.ItemRepository;
 import com.amit.mymarket.item.service.ItemManagementService;
+import com.amit.storage.service.MediaStorageService;
+import com.amit.storage.util.PathSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
