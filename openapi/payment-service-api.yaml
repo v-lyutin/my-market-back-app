@@ -1,24 +1,25 @@
 openapi: 3.0.3
 info:
   title: Payment Service API
-  version: 1.0.0
+  version: 1.0.1
   description: >
     REST API for the Payment Service.
     All monetary values are represented in the smallest currency units (kopecks) using integer (int64).
 
 servers:
   - url: http://localhost:8081
-    description: Local payment-service instance
+    description: Local Payment Service instance
 
 paths:
-  /api/payments/balance:
+  /api/accounts/{accountId}/balance:
     get:
+      tags: [Payment]
       summary: Get account balance
       description: Returns the current account balance in kopecks.
       operationId: getBalance
       parameters:
         - name: accountId
-          in: query
+          in: path
           required: true
           description: Account identifier
           schema:
@@ -31,7 +32,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/BalanceResponse"
         "400":
-          description: Invalid request (e.g., missing accountId)
+          description: Invalid request
           content:
             application/json:
               schema:
@@ -43,13 +44,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/payments/pay:
+  /api/accounts/{accountId}/payments:
     post:
+      tags: [Payment]
       summary: Process payment
       description: >
         Deducts the specified amount from the account balance.
         If the resulting balance would be negative, the payment is considered failed.
       operationId: makePayment
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Identifier of the account to charge
+          schema:
+            type: string
       requestBody:
         required: true
         description: Payment request data
@@ -83,11 +92,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/payments/deposit:
+  /api/accounts/{accountId}/deposits:
     post:
+      tags: [Payment]
       summary: Deposit funds
       description: Adds the specified amount to the account balance.
       operationId: deposit
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Identifier of the account to deposit into
+          schema:
+            type: string
       requestBody:
         required: true
         description: Deposit operation data
@@ -136,15 +153,11 @@ components:
       type: object
       description: Request to deduct funds for an order payment
       properties:
-        accountId:
-          type: string
-          description: Identifier of the account to charge
         amount:
           type: integer
           format: int64
           description: Order amount in the smallest currency units (kopecks)
       required:
-        - accountId
         - amount
 
     PaymentResponse:
@@ -170,15 +183,11 @@ components:
       type: object
       description: Request to deposit funds into an account
       properties:
-        accountId:
-          type: string
-          description: Identifier of the account to deposit into
         amount:
           type: integer
           format: int64
           description: Deposit amount in the smallest currency units (kopecks)
       required:
-        - accountId
         - amount
 
     ErrorResponse:

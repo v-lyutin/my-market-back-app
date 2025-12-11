@@ -18,7 +18,7 @@ spring:
     user: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${CART_SERVICE_PORT:8080}
   error:
     include-message: always
     include-binding-errors: always
