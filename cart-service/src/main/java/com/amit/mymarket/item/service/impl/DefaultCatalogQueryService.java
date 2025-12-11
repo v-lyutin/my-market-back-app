@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
+@Service(value = "defaultCatalogQueryService")
 public class DefaultCatalogQueryService implements CatalogQueryService {
 
     private final ItemRepository itemRepository;

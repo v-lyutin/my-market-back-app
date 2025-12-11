@@ -1,5 +1,6 @@
 package com.amit.mymarket.item.api;
 
+import com.amit.mymarket.item.api.dto.ItemActionForm;
 import com.amit.mymarket.item.api.dto.MutateItemForm;
 import com.amit.mymarket.item.api.type.ItemAction;
 import com.amit.mymarket.item.service.type.SortType;
@@ -41,6 +42,17 @@ public class ItemResource {
                                 .modelAttribute("paging", catalogPageDto.paging())
                                 .build()
                 );
+    }
+
+    @PostMapping(path = "/{id}")
+    public Mono<Rendering> mutateItemFromItemPage(@PathVariable(name = "id") long id,
+                                                  @ModelAttribute ItemActionForm form,
+                                                  WebSession webSession) {
+
+        webSession.getAttributes().put("init", true);
+
+        return this.itemUseCase.mutateItem(webSession.getId(), id, form.action())
+                .thenReturn(Rendering.redirectTo("/items/" + id).build());
     }
 
     @PostMapping
