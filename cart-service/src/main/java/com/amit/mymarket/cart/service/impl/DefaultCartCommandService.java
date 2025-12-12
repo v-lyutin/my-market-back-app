@@ -64,9 +64,11 @@ public class DefaultCartCommandService implements CartCommandService {
     @Override
     public Mono<Void> clearActiveCart(String sessionId) {
         return SessionUtils.ensureSessionId(sessionId)
-                .flatMap(this::getRequiredActiveCart)
-                .flatMap(cart -> this.cartItemRepository.deleteByCartId(cart.getId()))
-                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
+                .flatMap(sid ->
+                        this.getRequiredActiveCart(sid)
+                                .flatMap(cart -> this.cartItemRepository.deleteByCartId(cart.getId()))
+                                .then(this.cartCacheInvalidator.invalidateCart(sid))
+                );
     }
 
     private Mono<Cart> getRequiredActiveCart(String sessionId) {

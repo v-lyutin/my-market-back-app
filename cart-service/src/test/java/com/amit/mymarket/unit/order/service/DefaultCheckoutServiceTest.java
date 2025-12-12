@@ -5,6 +5,7 @@ import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
+import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
 import com.amit.mymarket.order.domain.entity.Order;
@@ -12,6 +13,7 @@ import com.amit.mymarket.order.repository.OrderItemRepository;
 import com.amit.mymarket.order.repository.OrderRepository;
 import com.amit.mymarket.order.service.impl.DefaultCheckoutService;
 import com.amit.mymarket.order.service.util.OrderUtils;
+import com.amit.payment.client.service.PaymentServiceGateway;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +44,12 @@ class DefaultCheckoutServiceTest {
     @Mock
     private OrderItemRepository orderItemRepository;
 
+    @Mock
+    private PaymentServiceGateway paymentServiceGateway;
+
+    @Mock
+    private CartCacheInvalidator cartCacheInvalidator;
+
     @InjectMocks
     private DefaultCheckoutService checkoutService;
 
@@ -71,6 +79,9 @@ class DefaultCheckoutServiceTest {
         when(this.orderItemRepository.saveAll(anyList())).thenReturn(Flux.empty());
         when(this.cartItemRepository.deleteByCartId(activeCart.getId())).thenReturn(Mono.empty());
         when(this.cartRepository.save(any(Cart.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(this.paymentServiceGateway.tryPay(eq(sessionId), eq(expectedTotalMinor))).thenReturn(Mono.just(true));
+        when(this.cartCacheInvalidator.invalidateCart(eq(sessionId))).thenReturn(Mono.empty());
+
 
         Mono<Long> result = this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
 

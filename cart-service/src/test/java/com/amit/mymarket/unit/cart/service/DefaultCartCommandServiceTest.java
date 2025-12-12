@@ -4,9 +4,11 @@ import com.amit.mymarket.cart.domain.entity.Cart;
 import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
+import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.cart.service.impl.DefaultCartCommandService;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +31,11 @@ class DefaultCartCommandServiceTest {
     @Mock
     private CartItemRepository cartItemRepository;
 
+    @Mock
+    private CartCacheInvalidator cartCacheInvalidator;
+
     @InjectMocks
     private DefaultCartCommandService cartCommandService;
-
 
     @Test
     @DisplayName(value = "Should increment cart item quantity when active cart exists for session identifier")
@@ -46,6 +50,7 @@ class DefaultCartCommandServiceTest {
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
         when(this.cartItemRepository.incrementItemQuantity(activeCart.getId(), itemId)).thenReturn(Mono.just(1));
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.incrementCartItemQuantity(sessionId, itemId);
 
@@ -69,6 +74,7 @@ class DefaultCartCommandServiceTest {
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
         when(this.cartRepository.save(any(Cart.class))).thenReturn(Mono.just(createdCart));
         when(this.cartItemRepository.incrementItemQuantity(createdCart.getId(), itemId)).thenReturn(Mono.just(1));
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.incrementCartItemQuantity(sessionId, itemId);
 
@@ -84,6 +90,8 @@ class DefaultCartCommandServiceTest {
     void incrementCartItemQuantity_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
         String sessionId = "   ";
         long itemId = 10L;
+
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.incrementCartItemQuantity(sessionId, itemId);
 
@@ -111,6 +119,7 @@ class DefaultCartCommandServiceTest {
 
         when(cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
         when(cartItemRepository.deleteWhenItemQuantityIsOne(activeCart.getId(), itemId)).thenReturn(Mono.just(1));
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
 
@@ -135,6 +144,7 @@ class DefaultCartCommandServiceTest {
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
         when(this.cartItemRepository.deleteWhenItemQuantityIsOne(activeCart.getId(), itemId)).thenReturn(Mono.just(0));
         when(this.cartItemRepository.decrementWhenItemQuantityGreaterThanOne(activeCart.getId(), itemId)).thenReturn(Mono.just(1));
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
 
@@ -150,6 +160,8 @@ class DefaultCartCommandServiceTest {
     void decrementCartItemQuantityOrDelete_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
         String sessionId = "";
         long itemId = 10L;
+
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
 
@@ -171,6 +183,7 @@ class DefaultCartCommandServiceTest {
         long itemId = 10L;
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
 
@@ -198,6 +211,7 @@ class DefaultCartCommandServiceTest {
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
         when(this.cartItemRepository.deleteCartItem(activeCart.getId(), itemId)).thenReturn(Mono.just(1));
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.deleteCartItem(sessionId, itemId);
 
@@ -214,6 +228,7 @@ class DefaultCartCommandServiceTest {
         long itemId = 10L;
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.deleteCartItem(sessionId, itemId);
 
@@ -233,6 +248,8 @@ class DefaultCartCommandServiceTest {
     void deleteCartItem_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
         String sessionId = "  ";
         long itemId = 10L;
+
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.deleteCartItem(sessionId, itemId);
 
@@ -259,6 +276,7 @@ class DefaultCartCommandServiceTest {
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(activeCart));
         when(this.cartItemRepository.deleteByCartId(activeCart.getId())).thenReturn(Mono.empty());
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.clearActiveCart(sessionId);
 
@@ -274,6 +292,7 @@ class DefaultCartCommandServiceTest {
         String sessionId = "session-123";
 
         when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
+        when(this.cartCacheInvalidator.invalidateCart(sessionId)).thenReturn(Mono.empty());
 
         Mono<Void> result = this.cartCommandService.clearActiveCart(sessionId);
 
