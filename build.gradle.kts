@@ -1,44 +1,30 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.5.7"
-	id("io.spring.dependency-management") version "1.1.7"
+	id("org.springframework.boot") version "3.5.7" apply false
+	id("io.spring.dependency-management") version "1.1.7" apply false
+	id("org.openapi.generator") version "7.8.0" apply false
 }
 
 group = "com.amit"
 version = "0.0.1"
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+subprojects {
+
+	apply(plugin = "java")
+	apply(plugin = "io.spring.dependency-management")
+
+	repositories {
+		mavenCentral()
 	}
-}
 
-repositories {
-	mavenCentral()
-}
+	java {
+		toolchain {
+			languageVersion = JavaLanguageVersion.of(21)
+		}
+	}
 
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("org.springframework.boot:spring-boot-starter-validation")
-	implementation("org.springframework.boot:spring-boot-starter-jdbc")
-	implementation("org.liquibase:liquibase-core")
-	implementation("io.minio:minio:8.6.0")
-	implementation("org.apache.tika:tika-core:3.2.3")
-	runtimeOnly("org.postgresql:r2dbc-postgresql")
-	runtimeOnly("org.postgresql:postgresql")
+	tasks.withType<Test> {
+		useJUnitPlatform()
+	}
 
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.boot:spring-boot-testcontainers")
-	testImplementation("io.projectreactor:reactor-test")
-	testImplementation("org.testcontainers:junit-jupiter")
-	testImplementation("org.testcontainers:r2dbc")
-	testImplementation("org.testcontainers:postgresql")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-}
-
-tasks.withType<Test> {
-	useJUnitPlatform()
 }
