@@ -5,14 +5,20 @@ import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
+import com.amit.mymarket.cart.service.CartQueryService;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
+import com.amit.mymarket.common.exception.ServiceException;
 import com.amit.mymarket.common.util.SessionUtils;
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.domain.entity.OrderItem;
 import com.amit.mymarket.order.repository.OrderItemRepository;
 import com.amit.mymarket.order.repository.OrderRepository;
 import com.amit.mymarket.order.service.CheckoutService;
+import com.amit.mymarket.order.service.exception.InsufficientFundsException;
+import com.amit.mymarket.order.service.model.CheckoutAvailability;
 import com.amit.mymarket.order.service.util.OrderUtils;
+import com.amit.payment.client.exception.PaymentServiceUnavailableException;
+import com.amit.payment.client.service.PaymentServiceGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -31,12 +37,23 @@ public class DefaultCheckoutService implements CheckoutService {
 
     private final OrderItemRepository orderItemRepository;
 
+    private final PaymentServiceGateway paymentServiceGateway;
+
+    private final CartQueryService cartQueryService;
+
     @Autowired
-    public DefaultCheckoutService(CartRepository cartRepository, CartItemRepository cartItemRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
+    public DefaultCheckoutService(CartRepository cartRepository,
+                                  CartItemRepository cartItemRepository,
+                                  OrderRepository orderRepository,
+                                  OrderItemRepository orderItemRepository,
+                                  PaymentServiceGateway paymentServiceGateway,
+                                  CartQueryService cartQueryService) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.paymentServiceGateway = paymentServiceGateway;
+        this.cartQueryService = cartQueryService;
     }
 
     @Override
@@ -49,6 +66,25 @@ public class DefaultCheckoutService implements CheckoutService {
                     List<CartItemRow> cartRows = tuple.getT2();
                     return this.createOrderAndClearCart(cart, cartRows);
                 });
+    }
+
+    @Override
+    public Mono<CheckoutAvailability> getCheckoutAvailability(String sessionId) {
+        return SessionUtils.ensureSessionId(sessionId)
+                .flatMap(sid -> this.cartQueryService.calculateCartTotalPrice(sid)
+                        .flatMap(totalMinor -> this.paymentServiceGateway.getBalanceKopecks(sid)
+                                .map(balance -> {
+                                    if (balance >= totalMinor) {
+                                        return new CheckoutAvailability(true, null);
+                                    }
+                                    return new CheckoutAvailability(false, "Insufficient funds");
+                                })
+                                .onErrorResume(
+                                        PaymentServiceUnavailableException.class,
+                                        exception -> Mono.just(new CheckoutAvailability(false, "Payment service is unavailable"))
+                                )
+                        )
+                );
     }
 
     private Mono<Cart> getRequiredActiveCart(String sessionId) {
@@ -70,15 +106,25 @@ public class DefaultCheckoutService implements CheckoutService {
     private Mono<Long> createOrderAndClearCart(Cart cart, List<CartItemRow> cartRows) {
         long totalMinor = OrderUtils.calculateTotalMinor(cartRows);
 
-        Order order = new Order(cart.getSessionId(), totalMinor);
+        return this.paymentServiceGateway.tryPay(cart.getSessionId(), totalMinor)
+                .onErrorMap(PaymentServiceUnavailableException.class, exception -> new ServiceException("Payment service is unavailable"))
+                .flatMap(paid -> {
+                    if (!paid) {
+                        return Mono.error(new InsufficientFundsException(
+                                "Insufficient funds for sessionId=" + cart.getSessionId() + ", totalMinor=" + totalMinor
+                        ));
+                    }
 
-        return this.orderRepository.save(order)
-                .flatMap(savedOrder -> {
-                    List<OrderItem> orderItems = OrderUtils.buildOrderItems(savedOrder, cartRows);
+                    Order order = new Order(cart.getSessionId(), totalMinor);
 
-                    return this.orderItemRepository.saveAll(orderItems)
-                            .then(this.clearCart(cart))
-                            .thenReturn(savedOrder.getId());
+                    return this.orderRepository.save(order)
+                            .flatMap(savedOrder -> {
+                                List<OrderItem> orderItems = OrderUtils.buildOrderItems(savedOrder, cartRows);
+
+                                return this.orderItemRepository.saveAll(orderItems)
+                                        .then(this.clearCart(cart))
+                                        .thenReturn(savedOrder.getId());
+                            });
                 });
     }
 

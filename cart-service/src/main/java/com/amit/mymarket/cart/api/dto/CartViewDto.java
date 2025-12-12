@@ -6,5 +6,6 @@ import java.util.List;
 
 public record CartViewDto(
         List<ItemInfoView> items,
-        String totalFormatted) {
+        String totalFormatted,
+        long totalMinor) {
 }

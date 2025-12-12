@@ -14,7 +14,8 @@ public final class DefaultCartMapper implements CartMapper {
     public CartViewDto toCartViewDto(List<ItemInfoView> items, Long totalMinor) {
         return new CartViewDto(
                 items,
-                PriceFormatter.formatPrice(totalMinor)
+                PriceFormatter.formatPrice(totalMinor),
+                totalMinor
         );
     }
 

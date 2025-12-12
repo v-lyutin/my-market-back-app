@@ -1,5 +1,6 @@
 package com.amit.mymarket.order.service;
 
+import com.amit.mymarket.order.service.model.CheckoutAvailability;
 import reactor.core.publisher.Mono;
 
 public interface CheckoutService {
@@ -12,5 +13,8 @@ public interface CheckoutService {
      * and returns the new order id.
      */
     Mono<Long> createOrderFromActiveCartAndClear(String sessionId);
+
+    Mono<CheckoutAvailability> getCheckoutAvailability(String sessionId);
+
 
 }

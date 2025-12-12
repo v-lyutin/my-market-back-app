@@ -65,9 +65,22 @@
     <div class="row p-2">
         <div class="col">
             <form th:action="@{/orders}" method="post" th:if="${!items.isEmpty()}">
-                <div class="hstack gap-3">
-                    <h2 th:text="'Итого: ' + ${total} + ' ₽'">Итого: 0.00 ₽</h2>
-                    <button class="btn btn-warning ms-auto">Купить</button>
+                <div class="hstack gap-3 align-items-center">
+                    <div class="vstack">
+                        <h2 th:text="'Итого: ' + ${total} + ' ₽'">Итого: 0.00 ₽</h2>
+
+                        <!-- Message if checkout is disabled -->
+                        <div class="text-danger"
+                             th:if="${checkoutMessage != null}"
+                             th:text="${checkoutMessage}">
+                            Payment message
+                        </div>
+                    </div>
+
+                    <button class="btn btn-warning ms-auto"
+                            th:disabled="${!checkoutEnabled}">
+                        Купить
+                    </button>
                 </div>
             </form>
         </div>
