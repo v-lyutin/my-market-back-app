@@ -39,4 +39,6 @@ storage:
       - image/jpeg
       - image/png
       - image/webp
+payment-service-client:
+  base-url: ${PAYMENT_SERVICE_BASE_URL:http://localhost:8081}
 

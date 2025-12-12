@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":media-storage"))
+    implementation(project(":payment-service-client"))
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
