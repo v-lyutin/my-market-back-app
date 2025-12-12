@@ -6,6 +6,7 @@ import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.cart.service.CartQueryService;
+import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
 import com.amit.mymarket.common.util.SessionUtils;
@@ -41,19 +42,23 @@ public class DefaultCheckoutService implements CheckoutService {
 
     private final CartQueryService cartQueryService;
 
+    private final CartCacheInvalidator cartCacheInvalidator;
+
     @Autowired
     public DefaultCheckoutService(CartRepository cartRepository,
                                   CartItemRepository cartItemRepository,
                                   OrderRepository orderRepository,
                                   OrderItemRepository orderItemRepository,
                                   PaymentServiceGateway paymentServiceGateway,
-                                  CartQueryService cartQueryService) {
+                                  CartQueryService cartQueryService,
+                                  CartCacheInvalidator cartCacheInvalidator) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.paymentServiceGateway = paymentServiceGateway;
         this.cartQueryService = cartQueryService;
+        this.cartCacheInvalidator = cartCacheInvalidator;
     }
 
     @Override
@@ -133,7 +138,8 @@ public class DefaultCheckoutService implements CheckoutService {
                 .then(Mono.defer(() -> {
                     cart.setStatus(CartStatus.ORDERED);
                     return this.cartRepository.save(cart).then();
-                }));
+                }))
+                .then(this.cartCacheInvalidator.invalidateCart(cart.getSessionId()));
     }
 
 }

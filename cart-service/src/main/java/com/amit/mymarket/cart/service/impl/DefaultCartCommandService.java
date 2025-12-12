@@ -5,6 +5,7 @@ import com.amit.mymarket.cart.domain.type.CartStatus;
 import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.service.CartCommandService;
+import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,13 @@ public class DefaultCartCommandService implements CartCommandService {
 
     private final CartItemRepository cartItemRepository;
 
+    private final CartCacheInvalidator cartCacheInvalidator;
+
     @Autowired
-    public DefaultCartCommandService(CartRepository cartRepository, CartItemRepository cartItemRepository) {
+    public DefaultCartCommandService(CartRepository cartRepository, CartItemRepository cartItemRepository, CartCacheInvalidator cartCacheInvalidator) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.cartCacheInvalidator = cartCacheInvalidator;
     }
 
     @Override
@@ -29,7 +33,7 @@ public class DefaultCartCommandService implements CartCommandService {
         return SessionUtils.ensureSessionId(sessionId)
                 .flatMap(this::getOrCreateActiveCart)
                 .flatMap(cart -> this.cartItemRepository.incrementItemQuantity(cart.getId(), itemId))
-                .then();
+                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
     }
 
     @Override
@@ -46,7 +50,7 @@ public class DefaultCartCommandService implements CartCommandService {
                                     return Mono.just(deletedRowsCount);
                                 })
                 )
-                .then();
+                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
     }
 
     @Override
@@ -54,7 +58,7 @@ public class DefaultCartCommandService implements CartCommandService {
         return SessionUtils.ensureSessionId(sessionId)
                 .flatMap(this::getRequiredActiveCart)
                 .flatMap(cart -> this.cartItemRepository.deleteCartItem(cart.getId(), itemId))
-                .then();
+                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
     }
 
     @Override
@@ -62,7 +66,7 @@ public class DefaultCartCommandService implements CartCommandService {
         return SessionUtils.ensureSessionId(sessionId)
                 .flatMap(this::getRequiredActiveCart)
                 .flatMap(cart -> this.cartItemRepository.deleteByCartId(cart.getId()))
-                .then();
+                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
     }
 
     private Mono<Cart> getRequiredActiveCart(String sessionId) {
