@@ -1,0 +1,205 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  version: 1.0.1
+  description: >
+    REST API for the Payment Service.
+    All monetary values are represented in the smallest currency units (kopecks) using integer (int64).
+
+servers:
+  - url: http://localhost:8081
+    description: Local Payment Service instance
+
+paths:
+  /api/accounts/{accountId}/balance:
+    get:
+      tags: [Payment]
+      summary: Get account balance
+      description: Returns the current account balance in kopecks.
+      operationId: getBalance
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account identifier
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current account balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/accounts/{accountId}/payments:
+    post:
+      tags: [Payment]
+      summary: Process payment
+      description: >
+        Deducts the specified amount from the account balance.
+        If the resulting balance would be negative, the payment is considered failed.
+      operationId: makePayment
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Identifier of the account to charge
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: Payment request data
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+      responses:
+        "200":
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "400":
+          description: Invalid request (validation errors, incorrect data)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Insufficient funds — balance would become negative
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/accounts/{accountId}/deposits:
+    post:
+      tags: [Payment]
+      summary: Deposit funds
+      description: Adds the specified amount to the account balance.
+      operationId: deposit
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Identifier of the account to deposit into
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: Deposit operation data
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositRequest"
+      responses:
+        "200":
+          description: Deposit completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceResponse"
+        "400":
+          description: Invalid request (e.g., negative amount)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    BalanceResponse:
+      type: object
+      description: Account balance response
+      properties:
+        accountId:
+          type: string
+          description: Account identifier
+        balance:
+          type: integer
+          format: int64
+          description: Account balance expressed in the smallest currency units (kopecks)
+      required:
+        - accountId
+        - balance
+
+    PaymentRequest:
+      type: object
+      description: Request to deduct funds for an order payment
+      properties:
+        amount:
+          type: integer
+          format: int64
+          description: Order amount in the smallest currency units (kopecks)
+      required:
+        - amount
+
+    PaymentResponse:
+      type: object
+      description: Payment processing result
+      properties:
+        accountId:
+          type: string
+          description: Identifier of the charged account
+        amount:
+          type: integer
+          format: int64
+          description: Amount deducted from the account in the smallest currency units (kopecks)
+        success:
+          type: boolean
+          description: Indicates whether the payment was successfully processed
+      required:
+        - accountId
+        - amount
+        - success
+
+    DepositRequest:
+      type: object
+      description: Request to deposit funds into an account
+      properties:
+        amount:
+          type: integer
+          format: int64
+          description: Deposit amount in the smallest currency units (kopecks)
+      required:
+        - amount
+
+    ErrorResponse:
+      type: object
+      description: Error details returned by the Payment Service
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code (e.g., INVALID_REQUEST, INSUFFICIENT_FUNDS)
+        message:
+          type: string
+          description: Human-readable description of the error
+      required:
+        - code
+        - message
