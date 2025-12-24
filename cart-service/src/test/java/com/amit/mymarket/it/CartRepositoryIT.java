@@ -31,7 +31,7 @@ class CartRepositoryIT extends AbstractRepositoryIT {
                         .fetch()
                         .rowsUpdated())
                 .then(this.databaseClient.sql("""
-                                insert into shop.carts (id, session_id, status) values
+                                insert into shop.carts (id, user_id, status) values
                                 (1, 'session-123',  'ACTIVE'),
                                 (2, 'session-123',  'ORDERED'),
                                 (3, 'other-session', 'ACTIVE')
@@ -56,40 +56,40 @@ class CartRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return cart when cart with given session identifier and status exists")
-    void findBySessionIdAndStatus_shouldReturnCartWhenCartWithGivenSessionIdentifierAndStatusExists() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return cart when cart with given user identifier and status exists")
+    void findByUserIdAndStatus_shouldReturnCartWhenCartWithGivenUserIdentifierAndStatusExists() {
+        String userId = "session-123";
         CartStatus cartStatus = CartStatus.ACTIVE;
 
-        Mono<Cart> cartMono = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
+        Mono<Cart> cartMono = this.cartRepository.findByUserIdAndStatus(userId, cartStatus);
 
         StepVerifier.create(cartMono)
                 .assertNext(cart -> {
                     assertThat(cart.getId()).isEqualTo(1L);
-                    assertThat(cart.getSessionId()).isEqualTo("session-123");
+                    assertThat(cart.getUserId()).isEqualTo("session-123");
                     assertThat(cart.getStatus()).isEqualTo(CartStatus.ACTIVE);
                 })
                 .verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when cart with given session identifier exists but status does not match")
-    void findBySessionIdAndStatus_shouldReturnEmptyResultWhenStatusDoesNotMatchForSessionIdentifier() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return empty result when cart with given user identifier exists but status does not match")
+    void findByUserIdAndStatus_shouldReturnEmptyResultWhenStatusDoesNotMatchForUserIdentifier() {
+        String userId = "session-123";
         CartStatus cartStatus = CartStatus.ABANDONED;
 
-        Mono<Cart> cart = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
+        Mono<Cart> cart = this.cartRepository.findByUserIdAndStatus(userId, cartStatus);
 
         StepVerifier.create(cart).verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when cart with given session identifier does not exist")
-    void findBySessionIdAndStatus_shouldReturnEmptyResultWhenSessionIdentifierDoesNotExist() {
-        String sessionId = "unknown-session";
+    @DisplayName(value = "Should return empty result when cart with given user identifier does not exist")
+    void findByUserIdAndStatus_shouldReturnEmptyResultWhenUserIdentifierDoesNotExist() {
+        String userId = "unknown-session";
         CartStatus cartStatus = CartStatus.ACTIVE;
 
-        Mono<Cart> cart = this.cartRepository.findBySessionIdAndStatus(sessionId, cartStatus);
+        Mono<Cart> cart = this.cartRepository.findByUserIdAndStatus(userId, cartStatus);
 
         StepVerifier.create(cart).verifyComplete();
     }

@@ -44,7 +44,7 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
                         .rowsUpdated())
                 // carts
                 .then(this.databaseClient.sql("""
-                                insert into shop.carts (id, session_id) values
+                                insert into shop.carts (id, user_id) values
                                 (1, 'session-123'),
                                 (2, 'other-session')
                                 """)
@@ -80,16 +80,16 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return all items with correct quantities for active session without searchQuery filter")
-    void searchItemsWithQuantity_shouldReturnAllItemsForSessionWithoutSearchFilter() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return all items with correct quantities for active user without searchQuery filter")
+    void searchItemsWithQuantity_shouldReturnAllItemsForUserWithoutSearchFilter() {
+        String userId = "session-123";
         String searchQuery = null;
         String sortType = "ALPHA";
         long limit = 10L;
         long offset = 0L;
 
         Flux<ItemWithQuantity> itemWithQuantityFlux = this.itemRepository.searchItemsWithQuantity(
-                sessionId,
+                userId,
                 searchQuery,
                 sortType,
                 limit,
@@ -115,14 +115,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     @Test
     @DisplayName(value = "Should filter items by searchQuery term in title or description")
     void searchItemsWithQuantity_shouldFilterBySearchTermInTitleOrDescription() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         String searchQuery = "apple";
         String sortType = "ALPHA";
         long limit = 10L;
         long offset = 0L;
 
         Flux<ItemWithQuantity> itemWithQuantityFlux = this.itemRepository.searchItemsWithQuantity(
-                sessionId,
+                userId,
                 searchQuery,
                 sortType,
                 limit,
@@ -137,14 +137,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     @Test
     @DisplayName(value = "Should sort items alphabetically when sort type is ALPHA")
     void searchItemsWithQuantity_shouldSortAlphabeticallyWhenSortTypeIsAlpha() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         String searchQuery = null;
         String sortType = "ALPHA";
         long limit = 10L;
         long offset = 0L;
 
         Flux<ItemWithQuantity> itemWithQuantityFlux = this.itemRepository.searchItemsWithQuantity(
-                sessionId,
+                userId,
                 searchQuery,
                 sortType,
                 limit,
@@ -163,14 +163,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     @Test
     @DisplayName(value = "Should sort items by price when sort type is PRICE")
     void searchItemsWithQuantity_shouldSortByPriceWhenSortTypeIsPrice() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         String searchQuery = null;
         String sortType = "PRICE";
         long limit = 10L;
         long offset = 0L;
 
         Flux<ItemWithQuantity> itemWithQuantity = this.itemRepository.searchItemsWithQuantity(
-                sessionId,
+                userId,
                 searchQuery,
                 sortType,
                 limit,
@@ -189,14 +189,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     @Test
     @DisplayName(value = "Should apply limit and offset correctly")
     void searchItemsWithQuantity_shouldApplyLimitAndOffsetCorrectly() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         String searchQuery = null;
         String sortType = "ALPHA";
         long limit = 1L;
         long offset = 1L;
 
         Flux<ItemWithQuantity> itemWithQuantityFlux = this.itemRepository.searchItemsWithQuantity(
-                sessionId,
+                userId,
                 searchQuery,
                 sortType,
                 limit,
@@ -209,14 +209,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return item with zero quantity when item is not in session cart")
-    void findItemWithQuantity_shouldReturnItemWithZeroQuantityWhenItemIsNotInSessionCart() {
+    @DisplayName(value = "Should return item with zero quantity when item is not in user cart")
+    void findItemWithQuantity_shouldReturnItemWithZeroQuantityWhenItemIsNotInUserCart() {
         long itemId = 2L;
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<ItemWithQuantity> itemWithQuantityMono = this.itemRepository.findItemWithQuantity(
                 itemId,
-                sessionId
+                userId
         );
 
         StepVerifier.create(itemWithQuantityMono)
@@ -228,14 +228,14 @@ class ItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return item with correct quantity when item is in session cart")
-    void findItemWithQuantity_shouldReturnItemWithCorrectQuantityWhenItemIsInSessionCart() {
+    @DisplayName(value = "Should return item with correct quantity when item is in user cart")
+    void findItemWithQuantity_shouldReturnItemWithCorrectQuantityWhenItemIsInUserCart() {
         long itemId = 1L; // Apple with quantity (in cart) = 2 for session-123
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<ItemWithQuantity> itemWithQuantityMono = this.itemRepository.findItemWithQuantity(
                 itemId,
-                sessionId
+                userId
         );
 
         StepVerifier.create(itemWithQuantityMono)

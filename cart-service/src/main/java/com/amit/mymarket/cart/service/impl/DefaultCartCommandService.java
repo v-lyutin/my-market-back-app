@@ -7,7 +7,7 @@ import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.service.CartCommandService;
 import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
-import com.amit.mymarket.common.util.SessionUtils;
+import com.amit.mymarket.common.util.UserIdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -29,16 +29,16 @@ public class DefaultCartCommandService implements CartCommandService {
     }
 
     @Override
-    public Mono<Void> incrementCartItemQuantity(String sessionId, long itemId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Void> incrementCartItemQuantity(String userId, long itemId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(this::getOrCreateActiveCart)
                 .flatMap(cart -> this.cartItemRepository.incrementItemQuantity(cart.getId(), itemId))
-                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
+                .then(this.cartCacheInvalidator.invalidateCart(userId));
     }
 
     @Override
-    public Mono<Void> decrementCartItemQuantityOrDelete(String sessionId, long itemId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Void> decrementCartItemQuantityOrDelete(String userId, long itemId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(this::getRequiredActiveCart)
                 .flatMap(cart ->
                         this.cartItemRepository.deleteWhenItemQuantityIsOne(cart.getId(), itemId)
@@ -50,20 +50,20 @@ public class DefaultCartCommandService implements CartCommandService {
                                     return Mono.just(deletedRowsCount);
                                 })
                 )
-                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
+                .then(this.cartCacheInvalidator.invalidateCart(userId));
     }
 
     @Override
-    public Mono<Void> deleteCartItem(String sessionId, long itemId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Void> deleteCartItem(String userId, long itemId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(this::getRequiredActiveCart)
                 .flatMap(cart -> this.cartItemRepository.deleteCartItem(cart.getId(), itemId))
-                .then(this.cartCacheInvalidator.invalidateCart(sessionId));
+                .then(this.cartCacheInvalidator.invalidateCart(userId));
     }
 
     @Override
-    public Mono<Void> clearActiveCart(String sessionId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Void> clearActiveCart(String userId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(sid ->
                         this.getRequiredActiveCart(sid)
                                 .flatMap(cart -> this.cartItemRepository.deleteByCartId(cart.getId()))
@@ -71,18 +71,18 @@ public class DefaultCartCommandService implements CartCommandService {
                 );
     }
 
-    private Mono<Cart> getRequiredActiveCart(String sessionId) {
-        return this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Active cart not found for sessionId=" + sessionId)));
+    private Mono<Cart> getRequiredActiveCart(String userId) {
+        return this.cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Active cart not found for userId=" + userId)));
     }
 
 
-    private Mono<Cart> getOrCreateActiveCart(String sessionId) {
-        return this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
+    private Mono<Cart> getOrCreateActiveCart(String userId) {
+        return this.cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .switchIfEmpty(
                         Mono.defer(() -> {
                             Cart cart = new Cart();
-                            cart.setSessionId(sessionId);
+                            cart.setUserId(userId);
                             cart.setStatus(CartStatus.ACTIVE);
                             return this.cartRepository.save(cart);
                         })

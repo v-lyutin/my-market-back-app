@@ -33,23 +33,23 @@ class DefaultCartQueryServiceTest {
     private DefaultCartQueryService cartQueryService;
 
     @Test
-    @DisplayName(value = "Should return cart items when session identifier is valid and cart exists")
-    void getCartItems_shouldReturnCartItemsWhenSessionIdentifierIsValidAndCartExists() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return cart items when user identifier is valid and cart exists")
+    void getCartItems_shouldReturnCartItemsWhenUserIdIsValidAndCartExists() {
+        String userId = "session-123";
 
         Cart cart = new Cart();
         cart.setId(10L);
-        cart.setSessionId(sessionId);
+        cart.setUserId(userId);
         cart.setStatus(CartStatus.ACTIVE);
 
         CartItemRow firstCartItemRow = new CartItemRow(1L, "Apple", "Green", "/a.png", 100L, 2);
         CartItemRow secondCartItemRow = new CartItemRow(2L, "Banana", "Yellow", "/b.png", 50L, 1);
 
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.just(cart));
+        when(this.cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)).thenReturn(Mono.just(cart));
 
-        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.just(firstCartItemRow, secondCartItemRow));
+        when(this.cartItemRepository.findCartItems(userId)).thenReturn(Flux.just(firstCartItemRow, secondCartItemRow));
 
-        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(userId);
 
         StepVerifier.create(cartItemRows.collectList())
                 .assertNext(cartItemRowList -> {
@@ -59,21 +59,21 @@ class DefaultCartQueryServiceTest {
                 })
                 .verifyComplete();
 
-        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
-        verify(this.cartItemRepository, times(1)).findCartItems(sessionId);
+        verify(this.cartRepository, times(1)).findByUserIdAndStatus(userId, CartStatus.ACTIVE);
+        verify(this.cartItemRepository, times(1)).findCartItems(userId);
     }
 
     @Test
-    @DisplayName(value = "Should return error when session identifier is empty")
-    void getCartItems_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
-        String sessionId = "   ";
+    @DisplayName(value = "Should return error when user identifier is empty")
+    void getCartItems_shouldReturnErrorWhenUserIdIsEmpty() {
+        String userId = "   ";
 
-        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(userId);
 
         StepVerifier.create(cartItemRows)
                 .expectErrorSatisfies(throwable -> {
                     assertInstanceOf(ServiceException.class, throwable);
-                    assertEquals("Session id is empty", throwable.getMessage());
+                    assertEquals("userId is empty", throwable.getMessage());
                 })
                 .verify();
 
@@ -82,63 +82,63 @@ class DefaultCartQueryServiceTest {
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when session identifier is valid but cart does not exist")
+    @DisplayName(value = "Should return empty result when user identifier is valid but cart does not exist")
     void getCartItems_shouldReturnEmptyResultWhenCartDoesNotExist() {
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        when(this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
+        when(this.cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)).thenReturn(Mono.empty());
 
-        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(sessionId);
+        Flux<CartItemRow> cartItemRows = this.cartQueryService.getCartItems(userId);
 
         StepVerifier.create(cartItemRows).verifyComplete();
 
-        verify(this.cartRepository, times(1)).findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE);
+        verify(this.cartRepository, times(1)).findByUserIdAndStatus(userId, CartStatus.ACTIVE);
         verifyNoInteractions(this.cartItemRepository);
     }
 
     @Test
-    @DisplayName(value = "Should return total cart price when session identifier is valid")
-    void calculateCartTotalPrice_shouldReturnTotalPriceWhenSessionIdentifierIsValid() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return total cart price when user identifier is valid")
+    void calculateCartTotalPrice_shouldReturnTotalPriceWhenUserIdIsValid() {
+        String userId = "session-123";
 
-        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(Mono.just(500L));
+        when(this.cartItemRepository.calculateCartTotalPrice(userId)).thenReturn(Mono.just(500L));
 
-        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(userId);
 
         StepVerifier.create(totalPrice)
                 .expectNext(500L)
                 .verifyComplete();
 
-        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(sessionId);
+        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(userId);
     }
 
     @Test
-    @DisplayName(value = "Should return zero when session identifier is valid but no price is returned")
+    @DisplayName(value = "Should return zero when user identifier is valid but no price is returned")
     void calculateCartTotalPrice_shouldReturnZeroWhenRepositoryReturnsEmpty() {
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        when(this.cartItemRepository.calculateCartTotalPrice(sessionId)).thenReturn(Mono.empty());
+        when(this.cartItemRepository.calculateCartTotalPrice(userId)).thenReturn(Mono.empty());
 
-        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(userId);
 
         StepVerifier.create(totalPrice)
                 .expectNext(0L)
                 .verifyComplete();
 
-        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(sessionId);
+        verify(this.cartItemRepository, times(1)).calculateCartTotalPrice(userId);
     }
 
     @Test
-    @DisplayName(value = "Should return error when session identifier is empty")
-    void calculateCartTotalPrice_shouldReturnErrorWhenSessionIdentifierIsEmpty() {
-        String sessionId = "";
+    @DisplayName(value = "Should return error when user identifier is empty")
+    void calculateCartTotalPrice_shouldReturnErrorWhenUserIdIsEmpty() {
+        String userId = "";
 
-        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+        Mono<Long> totalPrice = this.cartQueryService.calculateCartTotalPrice(userId);
 
         StepVerifier.create(totalPrice)
                 .expectErrorSatisfies(throwable -> {
                     assertInstanceOf(ServiceException.class, throwable);
-                    assertEquals("Session id is empty", throwable.getMessage());
+                    assertEquals("userId is empty", throwable.getMessage());
                 })
                 .verify();
 

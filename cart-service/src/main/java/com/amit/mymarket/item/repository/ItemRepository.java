@@ -17,7 +17,7 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                    items.price_minor as price_minor,
                    coalesce(carts_items.quantity, 0) as quantity
             from shop.items
-            left join shop.carts on carts.session_id = :sessionId and carts.status = 'ACTIVE'
+            left join shop.carts on carts.user_id = :userId and carts.status = 'ACTIVE'
             left join shop.carts_items on carts_items.cart_id = carts.id and carts_items.item_id = items.id
             where (:search is null
                    or items.title ilike concat('%', :search, '%')
@@ -29,13 +29,7 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
             limit :limit
             offset :offset
             """)
-    Flux<ItemWithQuantity> searchItemsWithQuantity(
-            String sessionId,
-            String search,
-            String sort,
-            long limit,
-            long offset
-    );
+    Flux<ItemWithQuantity> searchItemsWithQuantity(String userId, String search, String sort, long limit, long offset);
 
     @Query(value = """
             select items.id          as id,
@@ -45,11 +39,11 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
                    items.price_minor as price_minor,
                    coalesce(carts_items.quantity, 0) as quantity
             from shop.items
-            left join shop.carts on carts.session_id = :sessionId and carts.status = 'ACTIVE'
+            left join shop.carts on carts.user_id = :userId and carts.status = 'ACTIVE'
             left join shop.carts_items on carts_items.cart_id = carts.id and carts_items.item_id = items.id
             where items.id = :itemId
             """)
-    Mono<ItemWithQuantity> findItemWithQuantity(long itemId, String sessionId);
+    Mono<ItemWithQuantity> findItemWithQuantity(long itemId, String userId);
 
     @Query(value = """
             select count(*)

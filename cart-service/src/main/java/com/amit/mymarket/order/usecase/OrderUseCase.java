@@ -7,10 +7,10 @@ import java.util.List;
 
 public interface OrderUseCase {
 
-    Mono<List<OrderDto>> getOrdersBySession(String sessionId);
+    Mono<List<OrderDto>> getOrdersByUserId(String userId);
 
-    Mono<OrderDto> getOrderByIdForSession(String sessionId, long orderId);
+    Mono<OrderDto> getOrderByIdForUserId(String userId, long orderId);
 
-    Mono<Long> createOrderFromActiveCartAndClear(String sessionId);
+    Mono<Long> createOrderFromActiveCartAndClear(String userId);
 
 }

@@ -14,8 +14,8 @@ public class Order {
     @Id
     private Long id;
 
-    @Column(value = "session_id")
-    private String sessionId;
+    @Column(value = "user_id")
+    private String userId;
 
     @Column(value = "status")
     private OrderStatus status = OrderStatus.CREATED;
@@ -26,9 +26,9 @@ public class Order {
 
     public Order() {}
 
-    public Order(String sessionId, long totalMinor) {
+    public Order(String userId, long totalMinor) {
         this.id = null;
-        this.sessionId = sessionId;
+        this.userId = userId;
         this.totalMinor = totalMinor;
     }
 
@@ -40,12 +40,12 @@ public class Order {
         this.id = id;
     }
 
-    public String getSessionId() {
-        return this.sessionId;
+    public String getUserId() {
+        return this.userId;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public OrderStatus getStatus() {
@@ -71,7 +71,7 @@ public class Order {
         }
         Order otherOrder = (Order) otherObject;
         return Objects.equals(this.id, otherOrder.id)
-                && Objects.equals(this.sessionId, otherOrder.sessionId)
+                && Objects.equals(this.userId, otherOrder.userId)
                 && this.status == otherOrder.status
                 && Objects.equals(this.totalMinor, otherOrder.totalMinor);
     }
@@ -85,7 +85,7 @@ public class Order {
     public String toString() {
         return "Order{" +
                 "id=" + this.id +
-                ", sessionId='" + this.sessionId +
+                ", userId='" + this.userId +
                 ", status=" + this.status +
                 ", totalMinor=" + this.totalMinor +
                 '}';

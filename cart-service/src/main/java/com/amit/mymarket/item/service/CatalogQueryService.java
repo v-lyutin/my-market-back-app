@@ -17,16 +17,16 @@ public interface CatalogQueryService {
     Mono<Page<Item>> getCatalogPage(String searchQuery, SortType sortType, int pageNumber, int pageSize);
 
     /**
-     * Returns the current quantity in cart for a single item of the given session.
+     * Returns the current quantity in cart for a single item of the given userId.
      * If item is not present in cart, returns 0.
      */
-    Mono<Integer> getCartQuantityForItem(String sessionId, long itemId);
+    Mono<Integer> getCartQuantityForItem(String userId, long itemId);
 
     /**
-     * Returns quantities in cart for a batch of items of the given session.
+     * Returns quantities in cart for a batch of items of the given userId.
      * Missing items must be treated as 0 in the returned map.
      */
-    Mono<Map<Long, Integer>> getCartQuantitiesForItems(String sessionId, List<Long> itemIds);
+    Mono<Map<Long, Integer>> getCartQuantitiesForItems(String userId, List<Long> itemIds);
 
     /**
      * Returns an item by id or throws NotFoundException if not present.

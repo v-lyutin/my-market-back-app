@@ -72,21 +72,21 @@ public class DefaultCatalogQueryService implements CatalogQueryService {
     }
 
     @Override
-    public Mono<Integer> getCartQuantityForItem(String sessionId, long itemId) {
-        return this.itemRepository.findItemWithQuantity(itemId, sessionId)
+    public Mono<Integer> getCartQuantityForItem(String userId, long itemId) {
+        return this.itemRepository.findItemWithQuantity(itemId, userId)
                 .map(itemWithQuantity -> Optional.ofNullable(itemWithQuantity.quantity()).orElse(0))
                 .defaultIfEmpty(0);
     }
 
     @Override
-    public Mono<Map<Long, Integer>> getCartQuantitiesForItems(String sessionId, List<Long> itemIds) {
+    public Mono<Map<Long, Integer>> getCartQuantitiesForItems(String userId, List<Long> itemIds) {
         if (CollectionUtils.isEmpty(itemIds)) {
             return Mono.just(Collections.emptyMap());
         }
 
         Set<Long> requestedItemIds = new HashSet<>(itemIds);
 
-        return this.cartItemRepository.findCartItems(sessionId)
+        return this.cartItemRepository.findCartItems(userId)
                 .collectList()
                 .map(cartItemRows -> {
                     Map<Long, Integer> itemQuantities = cartItemRows.stream()

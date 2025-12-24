@@ -5,7 +5,7 @@ import com.amit.mymarket.cart.repository.CartItemRepository;
 import com.amit.mymarket.cart.repository.CartRepository;
 import com.amit.mymarket.cart.repository.projection.CartItemRow;
 import com.amit.mymarket.cart.service.CartQueryService;
-import com.amit.mymarket.common.util.SessionUtils;
+import com.amit.mymarket.common.util.UserIdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -25,15 +25,15 @@ public class DefaultCartQueryService implements CartQueryService {
     }
 
     @Override
-    public Flux<CartItemRow> getCartItems(String sessionId) {
-        return SessionUtils.ensureSessionId(sessionId)
-                .flatMap(id -> this.cartRepository.findBySessionIdAndStatus(id, CartStatus.ACTIVE))
-                .flatMapMany(cart -> this.cartItemRepository.findCartItems(sessionId));
+    public Flux<CartItemRow> getCartItems(String userId) {
+        return UserIdUtils.ensureUserId(userId)
+                .flatMap(id -> this.cartRepository.findByUserIdAndStatus(id, CartStatus.ACTIVE))
+                .flatMapMany(cart -> this.cartItemRepository.findCartItems(userId));
     }
 
     @Override
-    public Mono<Long> calculateCartTotalPrice(String sessionId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Long> calculateCartTotalPrice(String userId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(this.cartItemRepository::calculateCartTotalPrice)
                 .defaultIfEmpty(0L);
     }

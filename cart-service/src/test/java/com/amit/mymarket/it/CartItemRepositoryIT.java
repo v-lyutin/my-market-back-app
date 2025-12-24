@@ -46,7 +46,7 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
                         .rowsUpdated())
                 // carts
                 .then(this.databaseClient.sql("""
-                                insert into shop.carts (id, session_id, status) values
+                                insert into shop.carts (id, user_id, status) values
                                 (1, 'session-123', 'ACTIVE'),
                                 (2, 'session-123', 'ABANDONED'),
                                 (3, 'another-session', 'ACTIVE')
@@ -84,11 +84,11 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return cart items for active cart with given session identifier sorted by title")
+    @DisplayName(value = "Should return cart items for active cart with given user identifier sorted by title")
     void findCartItems_shouldReturnActiveCartItemsSortedByTitle() {
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        Flux<CartItemRow> cartItemRowFlux = this.cartItemRepository.findCartItems(sessionId);
+        Flux<CartItemRow> cartItemRowFlux = this.cartItemRepository.findCartItems(userId);
 
         StepVerifier.create(cartItemRowFlux.collectList())
                 .assertNext(cartItemRowList -> {
@@ -109,11 +109,11 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should calculate total cart price for active cart with given session identifier")
+    @DisplayName(value = "Should calculate total cart price for active cart with given user identifier")
     void calculateCartTotalPrice_shouldReturnTotalPriceForActiveCart() {
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        Mono<Long> totalPriceMono = this.cartItemRepository.calculateCartTotalPrice(sessionId);
+        Mono<Long> totalPriceMono = this.cartItemRepository.calculateCartTotalPrice(userId);
 
         // 1 * 100 (Apple) + 2 * 50 (Banana) + 3 * 75 (Carrot) = 425
         StepVerifier.create(totalPriceMono)
@@ -126,10 +126,10 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     void incrementItemQuantity_shouldIncreaseQuantityWhenCartItemAlreadyExists() {
         long cartId = 1L;   // session-123
         long itemId = 1L;   // Apple
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterIncrementMono = this.cartItemRepository.incrementItemQuantity(cartId, itemId)
-                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .thenMany(this.cartItemRepository.findCartItems(userId))
                 .collectList();
 
         StepVerifier.create(cartItemRowsAfterIncrementMono)
@@ -151,10 +151,10 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     void decrementWhenItemQuantityGreaterThanOne_shouldDecreaseQuantityAndKeepCartItem() {
         long cartId = 1L;   // session-123
         long itemId = 3L;   // Carrot, quantity = 3
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterDecrementMono = this.cartItemRepository.decrementWhenItemQuantityGreaterThanOne(cartId, itemId)
-                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .thenMany(this.cartItemRepository.findCartItems(userId))
                 .collectList();
 
         StepVerifier.create(cartItemRowsAfterDecrementMono)
@@ -176,10 +176,10 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     void deleteCartItem_shouldDeleteCartItemRegardlessOfQuantity() {
         long cartId = 1L;   // session-123
         long itemId = 2L;   // Banana, quantity = 2
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterDeleteMono = this.cartItemRepository.deleteCartItem(cartId, itemId)
-                .thenMany(cartItemRepository.findCartItems(sessionId))
+                .thenMany(cartItemRepository.findCartItems(userId))
                 .collectList();
 
         StepVerifier.create(cartItemRowsAfterDeleteMono)
@@ -201,10 +201,10 @@ class CartItemRepositoryIT extends AbstractRepositoryIT {
     void deleteWhenItemQuantityIsOne_shouldDeleteCartItemWhenQuantityIsOne() {
         long cartId = 1L;   // session-123
         long itemId = 1L;   // Apple, quantity = 1
-        String sessionId = "session-123";
+        String userId = "session-123";
 
         Mono<List<CartItemRow>> cartItemRowsAfterConditionalDeleteMono = this.cartItemRepository.deleteWhenItemQuantityIsOne(cartId, itemId)
-                .thenMany(this.cartItemRepository.findCartItems(sessionId))
+                .thenMany(this.cartItemRepository.findCartItems(userId))
                 .collectList();
 
         StepVerifier.create(cartItemRowsAfterConditionalDeleteMono)

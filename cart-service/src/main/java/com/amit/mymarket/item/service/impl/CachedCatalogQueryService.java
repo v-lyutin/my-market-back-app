@@ -76,13 +76,13 @@ public class CachedCatalogQueryService implements CatalogQueryService {
     }
 
     @Override
-    public Mono<Integer> getCartQuantityForItem(String sessionId, long itemId) {
-        return this.delegate.getCartQuantityForItem(sessionId, itemId);
+    public Mono<Integer> getCartQuantityForItem(String userId, long itemId) {
+        return this.delegate.getCartQuantityForItem(userId, itemId);
     }
 
     @Override
-    public Mono<Map<Long, Integer>> getCartQuantitiesForItems(String sessionId, List<Long> itemIds) {
-        return this.delegate.getCartQuantitiesForItems(sessionId, itemIds);
+    public Mono<Map<Long, Integer>> getCartQuantitiesForItems(String userId, List<Long> itemIds) {
+        return this.delegate.getCartQuantitiesForItems(userId, itemIds);
     }
 
     @Override

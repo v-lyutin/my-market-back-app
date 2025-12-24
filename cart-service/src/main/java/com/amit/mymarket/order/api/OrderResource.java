@@ -22,7 +22,7 @@ public class OrderResource {
     @GetMapping
     public Mono<Rendering> getOrdersBySession(WebSession webSession) {
         webSession.getAttributes().put("init", true);
-        return this.orderUseCase.getOrdersBySession(webSession.getId())
+        return this.orderUseCase.getOrdersByUserId(webSession.getId())
                 .map(orders ->
                         Rendering.view("order/orders-view")
                                 .modelAttribute("orders", orders)
@@ -35,7 +35,7 @@ public class OrderResource {
                                                   @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
                                                   WebSession webSession) {
         webSession.getAttributes().put("init", true);
-        return this.orderUseCase.getOrderByIdForSession(webSession.getId(), id)
+        return this.orderUseCase.getOrderByIdForUserId(webSession.getId(), id)
                 .map(order ->
                         Rendering.view("order/order-view")
                                 .modelAttribute("order", order)

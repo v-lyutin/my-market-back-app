@@ -4,6 +4,6 @@ import reactor.core.publisher.Mono;
 
 public interface CartCacheInvalidator {
 
-    Mono<Void> invalidateCart(String sessionId);
+    Mono<Void> invalidateCart(String userId);
 
 }

@@ -41,16 +41,16 @@ public class ItemUseCaseFacade implements ItemUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<CatalogPageDto> getCatalogPage(String sessionId, String search, SortType sort, int pageNumber, int pageSize) {
+    public Mono<CatalogPageDto> getCatalogPage(String userId, String search, SortType sort, int pageNumber, int pageSize) {
         return this.catalogQueryService.getCatalogPage(search, sort, pageNumber, pageSize)
-                .flatMap(page -> this.buildCatalogPageDto(sessionId, search, sort, pageNumber, pageSize, page));
+                .flatMap(page -> this.buildCatalogPageDto(userId, search, sort, pageNumber, pageSize, page));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<ItemInfoView> getItem(String sessionId, long itemId) {
+    public Mono<ItemInfoView> getItem(String userId, long itemId) {
         Mono<Item> item = this.catalogQueryService.getItemById(itemId);
-        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(userId, itemId);
 
         return Mono.zip(item, quantity)
                 .map(tuple -> this.itemMapper.toItemInfoView(tuple.getT1(), tuple.getT2()));
@@ -58,14 +58,14 @@ public class ItemUseCaseFacade implements ItemUseCase {
 
     @Override
     @Transactional
-    public Mono<Void> mutateItem(String sessionId, long itemId, ItemAction itemAction) {
+    public Mono<Void> mutateItem(String userId, long itemId, ItemAction itemAction) {
         return switch (itemAction) {
-            case PLUS -> this.cartCommandService.incrementCartItemQuantity(sessionId, itemId);
-            case MINUS -> this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
+            case PLUS -> this.cartCommandService.incrementCartItemQuantity(userId, itemId);
+            case MINUS -> this.cartCommandService.decrementCartItemQuantityOrDelete(userId, itemId);
         };
     }
 
-    private Mono<CatalogPageDto> buildCatalogPageDto(String sessionId,
+    private Mono<CatalogPageDto> buildCatalogPageDto(String userId,
                                                      String search,
                                                      SortType sort,
                                                      int pageNumber,
@@ -84,7 +84,7 @@ public class ItemUseCaseFacade implements ItemUseCase {
             );
         }
         List<Long> itemIds = items.stream().map(Item::getId).toList();
-        return this.catalogQueryService.getCartQuantitiesForItems(sessionId, itemIds)
+        return this.catalogQueryService.getCartQuantitiesForItems(userId, itemIds)
                 .map(quantities -> this.toCatalogPageDto(items, quantities, paging, search, sort));
     }
 

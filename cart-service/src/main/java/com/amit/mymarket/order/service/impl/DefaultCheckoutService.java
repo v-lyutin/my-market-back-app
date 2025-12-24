@@ -9,7 +9,7 @@ import com.amit.mymarket.cart.service.CartQueryService;
 import com.amit.mymarket.cart.service.cache.CartCacheInvalidator;
 import com.amit.mymarket.common.exception.ResourceNotFoundException;
 import com.amit.mymarket.common.exception.ServiceException;
-import com.amit.mymarket.common.util.SessionUtils;
+import com.amit.mymarket.common.util.UserIdUtils;
 import com.amit.mymarket.order.domain.entity.Order;
 import com.amit.mymarket.order.domain.entity.OrderItem;
 import com.amit.mymarket.order.repository.OrderItemRepository;
@@ -62,10 +62,10 @@ public class DefaultCheckoutService implements CheckoutService {
     }
 
     @Override
-    public Mono<Long> createOrderFromActiveCartAndClear(String sessionId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<Long> createOrderFromActiveCartAndClear(String userId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(this::getRequiredActiveCart)
-                .zipWhen(cart -> this.getCartItems(cart.getSessionId()))
+                .zipWhen(cart -> this.getCartItems(cart.getUserId()))
                 .flatMap(tuple -> {
                     Cart cart = tuple.getT1();
                     List<CartItemRow> cartRows = tuple.getT2();
@@ -74,8 +74,8 @@ public class DefaultCheckoutService implements CheckoutService {
     }
 
     @Override
-    public Mono<CheckoutAvailability> getCheckoutAvailability(String sessionId) {
-        return SessionUtils.ensureSessionId(sessionId)
+    public Mono<CheckoutAvailability> getCheckoutAvailability(String userId) {
+        return UserIdUtils.ensureUserId(userId)
                 .flatMap(sid -> this.cartQueryService.calculateCartTotalPrice(sid)
                         .flatMap(totalMinor -> this.paymentServiceGateway.getBalanceKopecks(sid)
                                 .map(balance -> {
@@ -92,17 +92,17 @@ public class DefaultCheckoutService implements CheckoutService {
                 );
     }
 
-    private Mono<Cart> getRequiredActiveCart(String sessionId) {
-        return this.cartRepository.findBySessionIdAndStatus(sessionId, CartStatus.ACTIVE)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Active cart not found for sessionId=" + sessionId)));
+    private Mono<Cart> getRequiredActiveCart(String userId) {
+        return this.cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Active cart not found for userId=" + userId)));
     }
 
-    private Mono<List<CartItemRow>> getCartItems(String sessionId) {
-        return this.cartItemRepository.findCartItems(sessionId)
+    private Mono<List<CartItemRow>> getCartItems(String userId) {
+        return this.cartItemRepository.findCartItems(userId)
                 .collectList()
                 .flatMap(cartItemRows -> {
                     if (CollectionUtils.isEmpty(cartItemRows)) {
-                        return Mono.error(new ResourceNotFoundException("Active cart is empty for sessionId=" + sessionId));
+                        return Mono.error(new ResourceNotFoundException("Active cart is empty for userId=" + userId));
                     }
                     return Mono.just(cartItemRows);
                 });
@@ -111,16 +111,16 @@ public class DefaultCheckoutService implements CheckoutService {
     private Mono<Long> createOrderAndClearCart(Cart cart, List<CartItemRow> cartRows) {
         long totalMinor = OrderUtils.calculateTotalMinor(cartRows);
 
-        return this.paymentServiceGateway.tryPay(cart.getSessionId(), totalMinor)
+        return this.paymentServiceGateway.tryPay(cart.getUserId(), totalMinor)
                 .onErrorMap(PaymentServiceUnavailableException.class, exception -> new ServiceException("Payment service is unavailable"))
                 .flatMap(paid -> {
                     if (!paid) {
                         return Mono.error(new InsufficientFundsException(
-                                "Insufficient funds for sessionId=" + cart.getSessionId() + ", totalMinor=" + totalMinor
+                                "Insufficient funds for userId=" + cart.getUserId() + ", totalMinor=" + totalMinor
                         ));
                     }
 
-                    Order order = new Order(cart.getSessionId(), totalMinor);
+                    Order order = new Order(cart.getUserId(), totalMinor);
 
                     return this.orderRepository.save(order)
                             .flatMap(savedOrder -> {
@@ -139,7 +139,7 @@ public class DefaultCheckoutService implements CheckoutService {
                     cart.setStatus(CartStatus.ORDERED);
                     return this.cartRepository.save(cart).then();
                 }))
-                .then(this.cartCacheInvalidator.invalidateCart(cart.getSessionId()));
+                .then(this.cartCacheInvalidator.invalidateCart(cart.getUserId()));
     }
 
 }
