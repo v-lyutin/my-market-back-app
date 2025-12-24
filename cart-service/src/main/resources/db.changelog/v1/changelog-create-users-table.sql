@@ -10,7 +10,8 @@ CREATE TABLE ${schemaName}.roles (
 
 -- changeset v-lyutin:seed-roles
 INSERT INTO ${schemaName}.roles (name) VALUES ('ROLE_USER');
--- rollback DELETE FROM ${schemaName}.roles WHERE name = 'ROLE_USER';
+INSERT INTO ${schemaName}.roles (name) VALUES ('ROLE_MANAGER');
+-- rollback DELETE FROM ${schemaName}.roles WHERE name IN ('ROLE_USER', 'ROLE_MANAGER');
 
 -- changeset v-lyutin:create-users-table
 CREATE TABLE ${schemaName}.users (
