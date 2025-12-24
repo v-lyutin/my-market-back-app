@@ -8,6 +8,8 @@ import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
+
 @Controller
 @RequestMapping(path = "/orders")
 public class OrderResource {
@@ -20,9 +22,9 @@ public class OrderResource {
     }
 
     @GetMapping
-    public Mono<Rendering> getOrdersBySession(WebSession webSession) {
+    public Mono<Rendering> getOrdersBySession(Principal principal, WebSession webSession) {
         webSession.getAttributes().put("init", true);
-        return this.orderUseCase.getOrdersByUserId(webSession.getId())
+        return this.orderUseCase.getOrdersByUserId(principal.getName())
                 .map(orders ->
                         Rendering.view("order/orders-view")
                                 .modelAttribute("orders", orders)
@@ -33,9 +35,10 @@ public class OrderResource {
     @GetMapping(path = "/{id}")
     public Mono<Rendering> getOrderByIdForSession(@PathVariable(name = "id") long id,
                                                   @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
+                                                  Principal principal,
                                                   WebSession webSession) {
         webSession.getAttributes().put("init", true);
-        return this.orderUseCase.getOrderByIdForUserId(webSession.getId(), id)
+        return this.orderUseCase.getOrderByIdForUserId(principal.getName(), id)
                 .map(order ->
                         Rendering.view("order/order-view")
                                 .modelAttribute("order", order)
@@ -45,8 +48,8 @@ public class OrderResource {
     }
 
     @PostMapping
-    public Mono<Rendering> createOrderFromActiveCartAndClear(WebSession webSession) {
-        return this.orderUseCase.createOrderFromActiveCartAndClear(webSession.getId())
+    public Mono<Rendering> createOrderFromActiveCartAndClear(Principal principal, WebSession webSession) {
+        return this.orderUseCase.createOrderFromActiveCartAndClear(principal.getName())
                 .map(newOrderId -> Rendering.redirectTo("/orders/" + newOrderId + "?newOrder=true").build());
     }
 

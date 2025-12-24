@@ -13,6 +13,8 @@ import org.springframework.web.server.WebSession;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
+
 @Controller
 @RequestMapping(path = "/items")
 public class ItemResource {
@@ -29,11 +31,12 @@ public class ItemResource {
                                           @RequestParam(name = "sort", defaultValue = "NO") SortType sort,
                                           @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
                                           @RequestParam(name = "pageSize", defaultValue = "5") int pageSize,
+                                          Principal principal,
                                           WebSession webSession) {
 
         webSession.getAttributes().put("init", true);
 
-        return this.itemUseCase.getCatalogPage(webSession.getId(), search, sort, pageNumber, pageSize)
+        return this.itemUseCase.getCatalogPage(principal.getName(), search, sort, pageNumber, pageSize)
                 .map(catalogPageDto ->
                         Rendering.view("item/items-view")
                                 .modelAttribute("items", catalogPageDto.items())
@@ -47,16 +50,18 @@ public class ItemResource {
     @PostMapping(path = "/{id}")
     public Mono<Rendering> mutateItemFromItemPage(@PathVariable(name = "id") long id,
                                                   @ModelAttribute ItemActionForm form,
+                                                  Principal principal,
                                                   WebSession webSession) {
 
         webSession.getAttributes().put("init", true);
 
-        return this.itemUseCase.mutateItem(webSession.getId(), id, form.action())
+        return this.itemUseCase.mutateItem(principal.getName(), id, form.action())
                 .thenReturn(Rendering.redirectTo("/items/" + id).build());
     }
 
     @PostMapping
     public Mono<Rendering> mutateItemFromItemsPage(@ModelAttribute MutateItemForm form,
+                                                   Principal principal,
                                                    WebSession webSession) {
         webSession.getAttributes().put("init", true);
 
@@ -74,16 +79,16 @@ public class ItemResource {
                 .queryParam("pageSize", pageSize)
                 .build()
                 .toString();
-        return this.itemUseCase.mutateItem(webSession.getId(), id, action)
+        return this.itemUseCase.mutateItem(principal.getName(), id, action)
                 .thenReturn(Rendering.redirectTo(redirectUrl).build());
     }
 
     @GetMapping(path = "/{id}")
-    public Mono<Rendering> getItemPage(@PathVariable(name = "id") long id, WebSession webSession) {
+    public Mono<Rendering> getItemPage(@PathVariable(name = "id") long id, Principal principal, WebSession webSession) {
 
         webSession.getAttributes().put("init", true);
 
-        return this.itemUseCase.getItem(webSession.getId(), id)
+        return this.itemUseCase.getItem(principal.getName(), id)
                 .map(itemInfoView ->
                         Rendering.view("item/item-view")
                                 .modelAttribute("item", itemInfoView)

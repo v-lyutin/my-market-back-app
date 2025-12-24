@@ -15,6 +15,8 @@ import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
+
 @Controller
 @RequestMapping(path = "/cart/items")
 public class CartResource {
@@ -30,11 +32,11 @@ public class CartResource {
     }
 
     @GetMapping
-    public Mono<Rendering> getCart(WebSession webSession) {
+    public Mono<Rendering> getCart(Principal principal, WebSession webSession) {
         webSession.getAttributes().put("init", true);
 
-        Mono<CartViewDto> cartViewDto = this.cartUseCase.getCart(webSession.getId());
-        Mono<CheckoutAvailability> checkoutAvailability = this.checkoutService.getCheckoutAvailability(webSession.getId());
+        Mono<CartViewDto> cartViewDto = this.cartUseCase.getCart(principal.getName());
+        Mono<CheckoutAvailability> checkoutAvailability = this.checkoutService.getCheckoutAvailability(principal.getName());
 
         return Mono.zip(cartViewDto, checkoutAvailability)
                 .map(tuple -> {
@@ -50,10 +52,11 @@ public class CartResource {
     }
 
     @PostMapping
-    public Mono<Rendering> mutateCartItem(@ModelAttribute MutateCartItemForm form,
+    public Mono<Rendering> mutateCartItem(Principal principal,
+                                          @ModelAttribute MutateCartItemForm form,
                                           WebSession webSession) {
         webSession.getAttributes().put("init", true);
-        return this.cartUseCase.mutateCartItem(webSession.getId(), form.id(), form.action())
+        return this.cartUseCase.mutateCartItem(principal.getName(), form.id(), form.action())
                 .thenReturn(Rendering.redirectTo("/cart/items").build());
     }
 
