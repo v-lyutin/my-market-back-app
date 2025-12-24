@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Регистрация</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-light">
+<div class="container p-4" style="max-width: 560px;">
+    <div class="hstack gap-3 mb-3">
+        <h2><span class="badge text-bg-success">Витрина магазина</span></h2>
+        <a th:href="@{/items}" class="btn btn-secondary ms-auto bi bi-arrow-left-square"> На витрину</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title mb-3">Регистрация</h4>
+
+            <form th:action="@{/register}" method="post" th:object="${form}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Логин</label>
+                    <input class="form-control" th:field="*{username}" autocomplete="username" placeholder="Введите логин">
+                    <div class="text-danger small" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Пароль</label>
+                    <input type="password" class="form-control" th:field="*{password}" autocomplete="new-password" placeholder="Введите пароль">
+                    <div class="text-danger small" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Повторите пароль</label>
+                    <input type="password" class="form-control" th:field="*{confirmPassword}" autocomplete="new-password" placeholder="Повторите пароль">
+                    <div class="text-danger small" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                </div>
+
+                <div class="hstack gap-3">
+                    <button type="submit" class="btn btn-success bi bi-person-plus"> Зарегистрироваться</button>
+                    <a th:href="@{/login}" class="btn btn-outline-secondary ms-auto">Уже есть аккаунт</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

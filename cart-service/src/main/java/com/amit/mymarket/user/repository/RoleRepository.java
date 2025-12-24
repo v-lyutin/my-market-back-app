@@ -4,6 +4,7 @@ import com.amit.mymarket.user.model.Role;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface RoleRepository extends ReactiveCrudRepository<Role, Long> {
 
@@ -14,5 +15,7 @@ public interface RoleRepository extends ReactiveCrudRepository<Role, Long> {
                 WHERE users_roles.user_id = :userId
             """)
     Flux<String> findRoleNamesByUserId(Long userId);
+
+    Mono<Role> findByName(String name);
 
 }

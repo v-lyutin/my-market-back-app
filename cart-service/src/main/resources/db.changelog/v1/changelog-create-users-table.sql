@@ -25,10 +25,11 @@ CREATE TABLE ${schemaName}.users (
 
 -- changeset v-lyutin:create-users-roles-table
 CREATE TABLE ${schemaName}.users_roles (
-  user_id  BIGINT NOT NULL,
-  role_id  BIGINT NOT NULL,
+  id      BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  role_id BIGINT NOT NULL,
   CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES ${schemaName}.users(id) ON DELETE CASCADE,
   CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES ${schemaName}.roles(id) ON DELETE CASCADE,
-  CONSTRAINT pk_users_roles PRIMARY KEY (user_id, role_id)
+  CONSTRAINT uq_users_roles_user_role UNIQUE (user_id, role_id)
 );
 -- rollback DROP TABLE ${schemaName}.users_roles;

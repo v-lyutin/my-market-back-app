@@ -1,4 +1,4 @@
-package com.amit.mymarket.user.service;
+package com.amit.mymarket.user.service.impl;
 
 import com.amit.mymarket.user.repository.MarketUserRepository;
 import com.amit.mymarket.user.repository.RoleRepository;
