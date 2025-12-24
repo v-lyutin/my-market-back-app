@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.reactive.result.view.Rendering;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
@@ -32,9 +31,7 @@ public class CartResource {
     }
 
     @GetMapping
-    public Mono<Rendering> getCart(Principal principal, WebSession webSession) {
-        webSession.getAttributes().put("init", true);
-
+    public Mono<Rendering> getCart(Principal principal) {
         Mono<CartViewDto> cartViewDto = this.cartUseCase.getCart(principal.getName());
         Mono<CheckoutAvailability> checkoutAvailability = this.checkoutService.getCheckoutAvailability(principal.getName());
 
@@ -52,10 +49,7 @@ public class CartResource {
     }
 
     @PostMapping
-    public Mono<Rendering> mutateCartItem(Principal principal,
-                                          @ModelAttribute MutateCartItemForm form,
-                                          WebSession webSession) {
-        webSession.getAttributes().put("init", true);
+    public Mono<Rendering> mutateCartItem(@ModelAttribute MutateCartItemForm form, Principal principal) {
         return this.cartUseCase.mutateCartItem(principal.getName(), form.id(), form.action())
                 .thenReturn(Rendering.redirectTo("/cart/items").build());
     }

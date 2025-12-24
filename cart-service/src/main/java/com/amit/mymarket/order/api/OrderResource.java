@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.result.view.Rendering;
-import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
@@ -22,8 +21,7 @@ public class OrderResource {
     }
 
     @GetMapping
-    public Mono<Rendering> getOrdersBySession(Principal principal, WebSession webSession) {
-        webSession.getAttributes().put("init", true);
+    public Mono<Rendering> getOrdersBySession(Principal principal) {
         return this.orderUseCase.getOrdersByUserId(principal.getName())
                 .map(orders ->
                         Rendering.view("order/orders-view")
@@ -35,9 +33,7 @@ public class OrderResource {
     @GetMapping(path = "/{id}")
     public Mono<Rendering> getOrderByIdForSession(@PathVariable(name = "id") long id,
                                                   @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
-                                                  Principal principal,
-                                                  WebSession webSession) {
-        webSession.getAttributes().put("init", true);
+                                                  Principal principal) {
         return this.orderUseCase.getOrderByIdForUserId(principal.getName(), id)
                 .map(order ->
                         Rendering.view("order/order-view")
@@ -48,7 +44,7 @@ public class OrderResource {
     }
 
     @PostMapping
-    public Mono<Rendering> createOrderFromActiveCartAndClear(Principal principal, WebSession webSession) {
+    public Mono<Rendering> createOrderFromActiveCartAndClear(Principal principal) {
         return this.orderUseCase.createOrderFromActiveCartAndClear(principal.getName())
                 .map(newOrderId -> Rendering.redirectTo("/orders/" + newOrderId + "?newOrder=true").build());
     }
