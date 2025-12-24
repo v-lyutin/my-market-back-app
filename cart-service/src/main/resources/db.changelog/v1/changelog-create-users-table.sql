@@ -1,0 +1,33 @@
+-- liquibase formatted sql
+
+-- changeset v-lyutin:create-roles-table
+CREATE TABLE ${schemaName}.roles (
+  id    BIGSERIAL PRIMARY KEY,
+  name  VARCHAR(64) NOT NULL,
+  CONSTRAINT uq_roles_name UNIQUE (name)
+);
+-- rollback DROP TABLE ${schemaName}.roles;
+
+-- changeset v-lyutin:seed-roles
+INSERT INTO ${schemaName}.roles (name) VALUES ('ROLE_USER');
+-- rollback DELETE FROM ${schemaName}.roles WHERE name = 'ROLE_USER';
+
+-- changeset v-lyutin:create-users-table
+CREATE TABLE ${schemaName}.users (
+  id            BIGSERIAL PRIMARY KEY,
+  username      VARCHAR(128) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  enabled       BOOLEAN NOT NULL DEFAULT TRUE,
+  CONSTRAINT uq_users_username UNIQUE (username)
+);
+-- rollback DROP TABLE ${schemaName}.users;
+
+-- changeset v-lyutin:create-users-roles-table
+CREATE TABLE ${schemaName}.users_roles (
+  user_id  BIGINT NOT NULL,
+  role_id  BIGINT NOT NULL,
+  CONSTRAINT fk_users_roles_user FOREIGN KEY (user_id) REFERENCES ${schemaName}.users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_users_roles_role FOREIGN KEY (role_id) REFERENCES ${schemaName}.roles(id) ON DELETE CASCADE,
+  CONSTRAINT pk_users_roles PRIMARY KEY (user_id, role_id)
+);
+-- rollback DROP TABLE ${schemaName}.users_roles;
