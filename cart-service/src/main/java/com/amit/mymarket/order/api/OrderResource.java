@@ -21,7 +21,7 @@ public class OrderResource {
     }
 
     @GetMapping
-    public Mono<Rendering> getOrdersBySession(Principal principal) {
+    public Mono<Rendering> getOrdersByUserId(Principal principal) {
         return this.orderUseCase.getOrdersByUserId(principal.getName())
                 .map(orders ->
                         Rendering.view("order/orders-view")
@@ -31,9 +31,9 @@ public class OrderResource {
     }
 
     @GetMapping(path = "/{id}")
-    public Mono<Rendering> getOrderByIdForSession(@PathVariable(name = "id") long id,
-                                                  @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
-                                                  Principal principal) {
+    public Mono<Rendering> getOrderByIdForUser(@PathVariable(name = "id") long id,
+                                               @RequestParam(name = "newOrder", defaultValue = "false") boolean newOrder,
+                                               Principal principal) {
         return this.orderUseCase.getOrderByIdForUserId(principal.getName(), id)
                 .map(order ->
                         Rendering.view("order/order-view")
