@@ -8,11 +8,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientWebSecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +26,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockUser;
 
-@WebFluxTest(controllers = OrderResource.class)
+@WebFluxTest(
+        controllers = OrderResource.class,
+        excludeAutoConfiguration = {
+                ReactiveOAuth2ClientAutoConfiguration.class,
+                ReactiveOAuth2ClientWebSecurityAutoConfiguration.class,
+                ReactiveOAuth2ResourceServerAutoConfiguration.class
+        })
 @Import(value = {SecurityConfiguration.class, OrderResourceSecurityTest.TestMockConfiguration.class})
 class OrderResourceSecurityTest {
 
@@ -113,6 +123,14 @@ class OrderResourceSecurityTest {
 
     @TestConfiguration
     static class TestMockConfiguration {
+
+        @Bean
+        ReactiveAuthenticationManager reactiveAuthenticationManager() {
+            return authentication -> {
+                authentication.setAuthenticated(true);
+                return Mono.just(authentication);
+            };
+        }
 
         @Bean
         OrderUseCase orderUseCase() {
