@@ -15,8 +15,8 @@ public class PaymentClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ApiClient paymentApiClient(WebClient.Builder builder, PaymentServiceClientProperties properties) {
-        ApiClient apiClient = new ApiClient(builder.build());
+    public ApiClient paymentApiClient(WebClient paymentWebClient, PaymentServiceClientProperties properties) {
+        ApiClient apiClient = new ApiClient(paymentWebClient);
         apiClient.setBasePath(properties.baseUrl());
         return apiClient;
     }
