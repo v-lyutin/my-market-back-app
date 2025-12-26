@@ -33,7 +33,7 @@ class OrderRepositoryIT extends AbstractRepositoryIT {
                         .fetch()
                         .rowsUpdated())
                 .then(this.databaseClient.sql("""
-                                insert into shop.orders (id, session_id, total_minor) values
+                                insert into shop.orders (id, user_id, total_minor) values
                                 (1, 'session-123', 500),
                                 (2, 'session-123', 750),
                                 (3, 'another-session', 1000)
@@ -58,11 +58,11 @@ class OrderRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return all orders for given session identifier")
-    void findAllBySessionId_shouldReturnAllOrdersForGivenSessionIdentifier() {
-        String sessionId = "session-123";
+    @DisplayName(value = "Should return all orders for given user identifier")
+    void findAllByUserId_shouldReturnAllOrdersForGivenUserIdentifier() {
+        String userId = "session-123";
 
-        Flux<Order> orders = this.orderRepository.findAllBySessionId(sessionId);
+        Flux<Order> orders = this.orderRepository.findAllByUserId(userId);
 
         StepVerifier.create(orders.collectList())
                 .assertNext(orderList -> {
@@ -83,50 +83,50 @@ class OrderRepositoryIT extends AbstractRepositoryIT {
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when there are no orders for given session identifier")
-    void findAllBySessionId_shouldReturnEmptyResultWhenNoOrdersExistForGivenSessionIdentifier() {
-        String sessionId = "unknown-session";
+    @DisplayName(value = "Should return empty result when there are no orders for given user identifier")
+    void findAllByUserId_shouldReturnEmptyResultWhenNoOrdersExistForGivenUserIdentifier() {
+        String userId = "unknown-session";
 
-        Flux<Order> orders = this.orderRepository.findAllBySessionId(sessionId);
+        Flux<Order> orders = this.orderRepository.findAllByUserId(userId);
 
         StepVerifier.create(orders).verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return order when order with given identifier and session identifier exists")
-    void findByIdAndSessionId_shouldReturnOrderWhenOrderWithGivenIdentifierAndSessionIdentifierExists() {
+    @DisplayName(value = "Should return order when order with given identifier and user identifier exists")
+    void findByIdAndUserId_shouldReturnOrderWhenOrderWithGivenIdentifierAndUserIdentifierExists() {
         long orderId = 2L;
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        Mono<Order> result = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+        Mono<Order> result = this.orderRepository.findByIdAndUserId(orderId, userId);
 
         StepVerifier.create(result)
                 .assertNext(order -> {
                     assertThat(order.getId()).isEqualTo(2L);
                     assertThat(order.getTotalMinor()).isEqualTo(750L);
-                    assertThat(order.getSessionId()).isEqualTo("session-123");
+                    assertThat(order.getUserId()).isEqualTo("session-123");
                 })
                 .verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when order identifier does not exist for given session identifier")
-    void findByIdAndSessionId_shouldReturnEmptyResultWhenOrderIdentifierDoesNotExistForGivenSessionIdentifier() {
+    @DisplayName(value = "Should return empty result when order identifier does not exist for given user identifier")
+    void findByIdAndUserId_shouldReturnEmptyResultWhenOrderIdentifierDoesNotExistForGivenUserIdentifier() {
         long orderId = 999L;
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        Mono<Order> order = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+        Mono<Order> order = this.orderRepository.findByIdAndUserId(orderId, userId);
 
         StepVerifier.create(order).verifyComplete();
     }
 
     @Test
-    @DisplayName(value = "Should return empty result when order belongs to another session identifier")
-    void findByIdAndSessionId_shouldReturnEmptyResultWhenOrderBelongsToAnotherSessionIdentifier() {
+    @DisplayName(value = "Should return empty result when order belongs to another user identifier")
+    void findByIdAndUserId_shouldReturnEmptyResultWhenOrderBelongsToAnotherUserIdentifier() {
         long orderId = 3L;
-        String sessionId = "session-123";
+        String userId = "session-123";
 
-        Mono<Order> order = this.orderRepository.findByIdAndSessionId(orderId, sessionId);
+        Mono<Order> order = this.orderRepository.findByIdAndUserId(orderId, userId);
 
         StepVerifier.create(order).verifyComplete();
     }

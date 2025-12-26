@@ -13,8 +13,8 @@ public class Cart {
     @Id
     private Long id;
 
-    @Column(value = "session_id")
-    private String sessionId;
+    @Column(value = "user_id")
+    private String userId;
 
     @Column(value = "status")
     private CartStatus status = CartStatus.ACTIVE;
@@ -29,12 +29,12 @@ public class Cart {
         this.id = id;
     }
 
-    public String getSessionId() {
-        return this.sessionId;
+    public String getUserId() {
+        return this.userId;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public CartStatus getStatus() {
@@ -51,9 +51,7 @@ public class Cart {
             return false;
         }
         Cart otherCart = (Cart) otherObject;
-        return Objects.equals(this.id, otherCart.id)
-                && Objects.equals(this.sessionId, otherCart.sessionId)
-                && this.status == otherCart.status;
+        return Objects.equals(this.id, otherCart.id) && Objects.equals(this.userId, otherCart.userId) && this.status == otherCart.status;
     }
 
     @Override
@@ -65,7 +63,7 @@ public class Cart {
     public String toString() {
         return "Cart{" +
                 "id=" + this.id +
-                ", sessionId='" + this.sessionId +
+                ", userId='" + this.userId +
                 ", status=" + this.status +
                 '}';
     }

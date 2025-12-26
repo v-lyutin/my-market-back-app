@@ -18,19 +18,19 @@ public interface CartItemRepository extends ReactiveCrudRepository<com.amit.myma
             from shop.carts
             join shop.carts_items on carts_items.cart_id = carts.id
             join shop.items on items.id = carts_items.item_id
-            where carts.session_id = :sessionId and carts.status = 'ACTIVE'
+            where carts.user_id = :userId and carts.status = 'ACTIVE'
             order by lower(items.title) asc, items.id asc
             """)
-    Flux<CartItemRow> findCartItems(String sessionId);
+    Flux<CartItemRow> findCartItems(String userId);
 
     @Query(value = """
             select coalesce(sum(carts_items.quantity * items.price_minor), 0)
             from shop.carts
             join shop.carts_items on carts_items.cart_id = carts.id
             join shop.items on items.id = carts_items.item_id
-            where carts.session_id = :sessionId and carts.status = 'ACTIVE'
+            where carts.user_id = :userId and carts.status = 'ACTIVE'
             """)
-    Mono<Long> calculateCartTotalPrice(String sessionId);
+    Mono<Long> calculateCartTotalPrice(String userId);
 
     @Query(value = """
             insert into shop.carts_items (cart_id, item_id, quantity)

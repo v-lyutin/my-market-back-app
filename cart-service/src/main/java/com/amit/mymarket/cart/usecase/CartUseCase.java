@@ -6,8 +6,8 @@ import reactor.core.publisher.Mono;
 
 public interface CartUseCase {
 
-    Mono<CartViewDto> getCart(String sessionId);
+    Mono<CartViewDto> getCart(String userId);
 
-    Mono<Void> mutateCartItem(String sessionId, long itemId, CartAction cartAction);
+    Mono<Void> mutateCartItem(String userId, long itemId, CartAction cartAction);
 
 }

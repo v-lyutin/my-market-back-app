@@ -47,15 +47,15 @@ public class CachedCartUseCaseFacade implements CartUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<CartViewDto> getCart(String sessionId) {
-        String cacheKey = buildCartKey(sessionId);
+    public Mono<CartViewDto> getCart(String userId) {
+        String cacheKey = buildCartKey(userId);
 
         return this.redisTemplate.opsForValue()
                 .get(cacheKey)
                 .cast(CartViewDto.class)
                 .switchIfEmpty(Mono.defer(() -> {
-                    Mono<List<CartItemRow>> cartItemRows = this.cartQueryService.getCartItems(sessionId).collectList();
-                    Mono<Long> cartTotalPrice = this.cartQueryService.calculateCartTotalPrice(sessionId);
+                    Mono<List<CartItemRow>> cartItemRows = this.cartQueryService.getCartItems(userId).collectList();
+                    Mono<Long> cartTotalPrice = this.cartQueryService.calculateCartTotalPrice(userId);
                     return Mono.zip(cartItemRows, cartTotalPrice)
                             .map(tuple -> {
                                 List<CartItemRow> cartRows = tuple.getT1();
@@ -77,13 +77,13 @@ public class CachedCartUseCaseFacade implements CartUseCase {
 
     @Override
     @Transactional
-    public Mono<Void> mutateCartItem(String sessionId, long itemId, CartAction cartAction) {
-        String cacheKey = buildCartKey(sessionId);
+    public Mono<Void> mutateCartItem(String userId, long itemId, CartAction cartAction) {
+        String cacheKey = buildCartKey(userId);
 
         Mono<Void> command = switch (cartAction) {
-            case PLUS -> this.cartCommandService.incrementCartItemQuantity(sessionId, itemId);
-            case MINUS -> this.cartCommandService.decrementCartItemQuantityOrDelete(sessionId, itemId);
-            case DELETE -> this.cartCommandService.deleteCartItem(sessionId, itemId);
+            case PLUS -> this.cartCommandService.incrementCartItemQuantity(userId, itemId);
+            case MINUS -> this.cartCommandService.decrementCartItemQuantityOrDelete(userId, itemId);
+            case DELETE -> this.cartCommandService.deleteCartItem(userId, itemId);
         };
 
         return command
@@ -93,8 +93,8 @@ public class CachedCartUseCaseFacade implements CartUseCase {
                 );
     }
 
-    private String buildCartKey(String sessionId) {
-        return "cart:view:" + sessionId;
+    private String buildCartKey(String userId) {
+        return "cart:view:" + userId;
     }
 
 }

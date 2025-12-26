@@ -14,9 +14,9 @@ public class RedisCartCacheInvalidator implements CartCacheInvalidator {
     }
 
     @Override
-    public Mono<Void> invalidateCart(String sessionId) {
+    public Mono<Void> invalidateCart(String userId) {
         return this.redisTemplate.opsForValue()
-                .delete("cart:view:" + sessionId)
+                .delete("cart:view:" + userId)
                 .then();
     }
 

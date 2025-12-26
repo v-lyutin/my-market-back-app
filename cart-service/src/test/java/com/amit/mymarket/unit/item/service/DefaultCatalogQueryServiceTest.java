@@ -119,7 +119,7 @@ class DefaultCatalogQueryServiceTest {
     @Test
     @DisplayName(value = "Should return quantity when item with quantity exists in cart")
     void getCartQuantityForItem_shouldReturnQuantityWhenItemWithQuantityExists() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         long itemId = 1L;
 
         ItemWithQuantity itemWithQuantity = new ItemWithQuantity(
@@ -131,9 +131,9 @@ class DefaultCatalogQueryServiceTest {
                 5
         );
 
-        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.just(itemWithQuantity));
+        when(this.itemRepository.findItemWithQuantity(itemId, userId)).thenReturn(Mono.just(itemWithQuantity));
 
-        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(userId, itemId);
 
         StepVerifier.create(quantity)
                 .expectNext(5)
@@ -143,7 +143,7 @@ class DefaultCatalogQueryServiceTest {
     @Test
     @DisplayName(value = "Should return zero when quantity is null for item in cart")
     void getCartQuantityForItem_shouldReturnZeroWhenQuantityIsNull() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         long itemId = 1L;
 
         ItemWithQuantity itemWithQuantity = new ItemWithQuantity(
@@ -155,9 +155,9 @@ class DefaultCatalogQueryServiceTest {
                 null
         );
 
-        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.just(itemWithQuantity));
+        when(this.itemRepository.findItemWithQuantity(itemId, userId)).thenReturn(Mono.just(itemWithQuantity));
 
-        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(userId, itemId);
 
         StepVerifier.create(quantity)
                 .expectNext(0)
@@ -165,14 +165,14 @@ class DefaultCatalogQueryServiceTest {
     }
 
     @Test
-    @DisplayName(value = "Should return zero when item is not found in cart for session")
+    @DisplayName(value = "Should return zero when item is not found in cart for user")
     void getCartQuantityForItem_shouldReturnZeroWhenItemIsNotFound() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         long itemId = 1L;
 
-        when(this.itemRepository.findItemWithQuantity(itemId, sessionId)).thenReturn(Mono.empty());
+        when(this.itemRepository.findItemWithQuantity(itemId, userId)).thenReturn(Mono.empty());
 
-        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(sessionId, itemId);
+        Mono<Integer> quantity = this.catalogQueryService.getCartQuantityForItem(userId, itemId);
 
         StepVerifier.create(quantity)
                 .expectNext(0)
@@ -182,10 +182,10 @@ class DefaultCatalogQueryServiceTest {
     @Test
     @DisplayName(value = "Should return empty map when item identifier list is empty")
     void getCartQuantitiesForItems_shouldReturnEmptyMapWhenItemIdentifierListIsEmpty() {
-        String sessionIdentifier = "session-123";
+        String userId = "session-123";
         List<Long> itemIdentifierList = Collections.emptyList();
 
-        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(sessionIdentifier, itemIdentifierList);
+        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(userId, itemIdentifierList);
 
         StepVerifier.create(quantities)
                 .assertNext(resultMap -> assertTrue(resultMap.isEmpty()))
@@ -197,7 +197,7 @@ class DefaultCatalogQueryServiceTest {
     @Test
     @DisplayName(value = "Should return quantities for requested item identifiers and default zero for missing ones")
     void getCartQuantitiesForItems_shouldReturnQuantitiesAndZeroForMissingItems() {
-        String sessionId = "session-123";
+        String userId = "session-123";
         List<Long> itemId = List.of(1L, 2L, 3L);
 
         CartItemRow firstCartItemRow = new CartItemRow(
@@ -218,9 +218,9 @@ class DefaultCatalogQueryServiceTest {
                 null
         );
 
-        when(this.cartItemRepository.findCartItems(sessionId)).thenReturn(Flux.just(firstCartItemRow, thirdCartItemRow));
+        when(this.cartItemRepository.findCartItems(userId)).thenReturn(Flux.just(firstCartItemRow, thirdCartItemRow));
 
-        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(sessionId, itemId);
+        Mono<Map<Long, Integer>> quantities = this.catalogQueryService.getCartQuantitiesForItems(userId, itemId);
 
         StepVerifier.create(quantities)
                 .assertNext(resultMap -> {

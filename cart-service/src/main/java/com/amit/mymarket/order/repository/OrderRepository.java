@@ -8,18 +8,18 @@ import reactor.core.publisher.Mono;
 
 public interface OrderRepository extends ReactiveCrudRepository<Order, Long> {
 
-    @Query("""
-           select *
-           from shop.orders
-           where session_id = :sessionId
-           """)
-    Flux<Order> findAllBySessionId(String sessionId);
+    @Query(value = """
+            select *
+            from shop.orders
+            where user_id = :userId
+            """)
+    Flux<Order> findAllByUserId(String userId);
 
-    @Query("""
-           select *
-           from shop.orders
-           where id = :orderId and session_id = :sessionId
-           """)
-    Mono<Order> findByIdAndSessionId(long orderId, String sessionId);
+    @Query(value = """
+            select *
+            from shop.orders
+            where id = :orderId and user_id = :userId
+            """)
+    Mono<Order> findByIdAndUserId(long orderId, String userId);
 
 }

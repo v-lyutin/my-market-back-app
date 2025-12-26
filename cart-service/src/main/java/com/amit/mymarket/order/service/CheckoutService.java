@@ -6,15 +6,14 @@ import reactor.core.publisher.Mono;
 public interface CheckoutService {
 
     /**
-     * Creates an order from the session’s active cart:
+     * Creates an order from the user’s active cart:
      *  - snapshots title/totalMinor/quantity into orders_items,
      *  - calculates and stores total,
      *  - clears the cart,
      * and returns the new order id.
      */
-    Mono<Long> createOrderFromActiveCartAndClear(String sessionId);
+    Mono<Long> createOrderFromActiveCartAndClear(String userId);
 
-    Mono<CheckoutAvailability> getCheckoutAvailability(String sessionId);
-
+    Mono<CheckoutAvailability> getCheckoutAvailability(String userId);
 
 }

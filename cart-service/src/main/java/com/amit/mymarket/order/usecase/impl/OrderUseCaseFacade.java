@@ -30,8 +30,8 @@ public class OrderUseCaseFacade implements OrderUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<List<OrderDto>> getOrdersBySession(String sessionId) {
-        return this.orderQueryService.getOrdersBySession(sessionId)
+    public Mono<List<OrderDto>> getOrdersByUserId(String userId) {
+        return this.orderQueryService.getOrdersByUserId(userId)
                 .flatMap(order ->
                         this.orderQueryService.getOrderItems(order.getId())
                                 .collectList()
@@ -42,8 +42,8 @@ public class OrderUseCaseFacade implements OrderUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Mono<OrderDto> getOrderByIdForSession(String sessionId, long orderId) {
-        return this.orderQueryService.getOrderByIdForSession(orderId, sessionId)
+    public Mono<OrderDto> getOrderByIdForUserId(String userId, long orderId) {
+        return this.orderQueryService.getOrderByIdForUserId(orderId, userId)
                 .flatMap(order ->
                         this.orderQueryService.getOrderItems(order.getId())
                                 .collectList()
@@ -53,8 +53,8 @@ public class OrderUseCaseFacade implements OrderUseCase {
 
     @Override
     @Transactional
-    public Mono<Long> createOrderFromActiveCartAndClear(String sessionId) {
-        return this.checkoutService.createOrderFromActiveCartAndClear(sessionId);
+    public Mono<Long> createOrderFromActiveCartAndClear(String userId) {
+        return this.checkoutService.createOrderFromActiveCartAndClear(userId);
     }
 
 }

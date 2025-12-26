@@ -17,6 +17,18 @@ spring:
     url: ${JDBC_URL:jdbc:postgresql://localhost:5432/my-market}
     user: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
+  security:
+    oauth2:
+      client:
+        registration:
+          payment-service:
+            provider: keycloak
+            client-id: my-market-service
+            client-secret: ${CLIENT_SECRET:JTlSvYPIGnpxwS6AaSgU2i5zLBrnEeQx}
+            authorization-grant-type: client_credentials
+        provider:
+          keycloak:
+            issuer-uri: ${ISSUER_URI:http://localhost:18080/realms/my-market}
 server:
   port: ${CART_SERVICE_PORT:8080}
   error:

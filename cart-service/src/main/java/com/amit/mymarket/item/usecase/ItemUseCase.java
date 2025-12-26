@@ -8,10 +8,10 @@ import reactor.core.publisher.Mono;
 
 public interface ItemUseCase {
 
-    Mono<CatalogPageDto> getCatalogPage(String sessionId, String search, SortType sort, int pageNumber, int pageSize);
+    Mono<CatalogPageDto> getCatalogPage(String userId, String search, SortType sort, int pageNumber, int pageSize);
 
-    Mono<ItemInfoView> getItem(String sessionId, long itemId);
+    Mono<ItemInfoView> getItem(String userId, long itemId);
 
-    Mono<Void> mutateItem(String sessionId, long itemId, ItemAction itemAction);
+    Mono<Void> mutateItem(String userId, long itemId, ItemAction itemAction);
 
 }
